@@ -15,6 +15,30 @@ const apps = {
   BUBBLE: "http://nextos.altervista.org/Bubble/",
 };
 
+const files = [
+  {
+    name: "GLITCH",
+    type: "file", // sempre file per ora
+    perms: "-exec", // stringa permessi
+    size: 4096, // dimensione in byte
+    mtime: "Sep 29 2025 15:23",
+  },
+  {
+    name: "BALL",
+    type: "file", // sempre file per ora
+    perms: "-exec",
+    size: 8192,
+    mtime: "Oct 14 2025 08:12",
+  },
+  {
+    name: "BUBBLE",
+    type: "file", // sempre file per ora
+    perms: "-exec",
+    size: 2048,
+    mtime: "Jan 02 2026 19:47",
+  },
+];
+
 /* ================================
    RIFERIMENTI DOM
 ================================ */
@@ -54,11 +78,10 @@ function bootSequence() {
     "",
     " [INFO] Establishing secure link with remote server: key exchange in progress...",
     " [INFO] SERVER 404 AUTHENTICATED - LINK ESTABLISHED",
+    " [INFO] All system patches are up to date.",
     "",
     "Finalizing boot sequence...",
     "",
-    " [INFO] All system patches are up to date.",
-    " ",
   ];
 
   let index = 0;
@@ -73,18 +96,17 @@ function bootSequence() {
       // Fine boot → abilita input
       input.disabled = false;
       input.focus();
+
       // mostra il prompt
       setTimeout(() => {
         clearTerminal();
-        appendLine("HOST: SERVER404");
-        appendLine("TYPE 'HELP' FOR LIST OF COMMANDS");
+
+        appendLine("" + new Date().toLocaleString());
         appendLine("");
         appendLine("SYSTEM READY");
         const prompt = terminal.querySelector(".prompt");
         prompt.classList.remove("hidden");
       }, 500);
-
-      prompt.scrollIntoView({ behavior: "smooth" });
     }
   }
 
@@ -183,22 +205,31 @@ function executeCommand() {
   switch (cmd) {
     case "LS":
       appendLine(" ");
-      appendLine("AVAILABLE APPLICATIONS:");
+      appendLine("total " + files.length + " files found");
       appendLine("");
-      Object.keys(apps).forEach((app) => {
-        appendLine(" -exec - " + app);
+
+      files.forEach((f) => {
+        // formatta dimensione in KB se più grande di 1024
+        const size =
+          f.size > 1024 ? (f.size / 1024).toFixed(1) + "K" : f.size + "B";
+
+        const line =
+          `${f.perms}` + `${size.padStart(6, " ")} ${f.mtime} ${f.name}`;
+
+        appendLine(line);
       });
-      appendLine("");
+
+      appendLine(" ");
       break;
 
     case "HELP":
       appendLine("");
       appendLine("AVAILABLE COMMANDS:");
       appendLine("");
-      appendLine(" [ LS    ]-> list applications");
-      appendLine(" [ HELP  ]-> show this message");
-      appendLine(" [ <APP> ]-> launch application");
-      appendLine(" [ CLEAR ]-> clear screen");
+      appendLine(" [  LS     ] -> list applications");
+      appendLine(" [  HELP   ] -> show this message");
+      appendLine(" [  <APP>  ] -> launch application");
+      appendLine(" [  CLEAR  ] -> clear screen");
       appendLine("");
       break;
 
@@ -207,7 +238,7 @@ function executeCommand() {
       break;
 
     default:
-      appendLine("Command not found. Type HELP for list.");
+      appendLine("Command not found. Type 'HELP' for list.");
       break;
   }
 }

@@ -11,7 +11,7 @@ body {
   width: 100%;
   height: 100%;
 
-  background: #000000;
+  background: #0f0f0f;
   color: #00ff88;
 
   font-family: "Courier New", Courier, monospace;
@@ -52,10 +52,10 @@ body {
 
   white-space: pre;
 
-  color: #00ffaa;
-  text-shadow: 0 0 5px #00ff88;
+  color: #afc2bb;
 
   text-align: left;
+  font-weight: bold;
 }
 
 /* =========================================================
