@@ -23,6 +23,75 @@ const input = document.getElementById("cmd");
 const terminal = document.getElementById("terminal");
 const caret = document.getElementById("caret");
 
+// Disabilito l'inserimento di comandi all'inizio
+input.disabled = true;
+
+/* ================================
+   AVVIO SISTEMA
+================================ */
+
+bootSequence();
+
+/* ================================
+   SEQUENZA DI AVVIO
+================================ */
+
+function bootSequence() {
+  const bootLines = [
+    "Booting NextOS kernel...",
+    " [OK]",
+    "",
+    "Loading core modules: ",
+    " [OK] MEMORY...",
+    " [OK] IO...",
+    " [OK] NETWORK...",
+    "",
+    "Checking devices...",
+    " [OK]",
+    "",
+    "Mounting file system...",
+    " [OK]",
+    "",
+    " [INFO] Establishing secure link with remote server: key exchange in progress...",
+    " [INFO] SERVER 404 AUTHENTICATED - LINK ESTABLISHED",
+    "",
+    "Finalizing boot sequence...",
+    "",
+    " [INFO] All system patches are up to date.",
+    " ",
+  ];
+
+  let index = 0;
+
+  function nextLine() {
+    if (index < bootLines.length) {
+      appendLine(bootLines[index]);
+      index++;
+
+      setTimeout(nextLine, 200 + Math.random() * 400);
+    } else {
+      // Fine boot → abilita input
+      input.disabled = false;
+      input.focus();
+      // mostra il prompt
+      setTimeout(() => {
+        clearTerminal();
+        appendLine("HOST: SERVER404");
+        appendLine("TYPE 'HELP' FOR LIST OF COMMANDS");
+        appendLine("");
+        appendLine("SYSTEM READY");
+        const prompt = terminal.querySelector(".prompt");
+        prompt.classList.remove("hidden");
+      }, 500);
+
+      prompt.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  // piccolo ritardo iniziale
+  setTimeout(nextLine, 800);
+}
+
 /* ================================
    VARIABILI DI STATO
 ================================ */
@@ -40,6 +109,10 @@ let blinkTimeout = null;
 function appendLine(text) {
   const div = document.createElement("div");
   div.className = "line";
+
+  if (text.startsWith(" [INFO]")) {
+    div.style.color = "#2eb2bb";
+  }
 
   // Evita righe "vuote" che collassano
   div.textContent = text && text.trim() !== "" ? text : "\u00A0";
@@ -110,20 +183,23 @@ function executeCommand() {
   switch (cmd) {
     case "LS":
       appendLine(" ");
-      appendLine("Applications available:");
-      appendLine(" ");
-      Object.keys(apps).forEach((app) => appendLine("> " + app));
-      appendLine(" ");
+      appendLine("AVAILABLE APPLICATIONS:");
+      appendLine("");
+      Object.keys(apps).forEach((app) => {
+        appendLine(" -exec - " + app);
+      });
+      appendLine("");
       break;
 
     case "HELP":
       appendLine("");
-      appendLine("Available commands:");
+      appendLine("AVAILABLE COMMANDS:");
       appendLine("");
-      appendLine("LS list applications");
-      appendLine("HELP show this message");
-      appendLine("<APP> launch application");
-      appendLine("CLEAR clear screen");
+      appendLine(" [ LS    ]-> list applications");
+      appendLine(" [ HELP  ]-> show this message");
+      appendLine(" [ <APP> ]-> launch application");
+      appendLine(" [ CLEAR ]-> clear screen");
+      appendLine("");
       break;
 
     case "CLEAR":
