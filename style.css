@@ -27,8 +27,8 @@ body {
    ========================================================= */
 
 .terminal {
-  width: 90%;
-  max-width: 90%;
+  width: 70%;
+  max-width: 70%;
   height: 80%;
 
   padding: 20px;
@@ -51,14 +51,14 @@ body {
 
 .header {
   margin-bottom: 30px;
-  margin-left: -76px;
+  margin-left: 0px;
 
   white-space: pre;
 
   color: #00ffaa;
   text-shadow: 0 0 5px #00ff88;
 
-  text-align: center;
+  text-align: left;
 }
 
 /* =========================================================

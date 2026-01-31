@@ -1,4 +1,11 @@
 /* ================================
+   STORIA COMANDI
+================================ */
+
+const history = [];
+let historyIndex = -1;
+
+/* ================================
    CONFIGURAZIONE APPLICAZIONI
 ================================ */
 
@@ -78,6 +85,11 @@ function pauseBlink() {
  */
 function executeCommand() {
   const raw = input.value.trim();
+  // Aggiunge alla history solo se non vuoto
+  if (raw !== "") {
+    history.push(raw);
+    historyIndex = history.length; // reset index
+  }
   const cmd = raw.toUpperCase();
 
   input.value = "";
@@ -139,11 +151,34 @@ function clearTerminal() {
  * Invio comando con ENTER
  */
 input.addEventListener("keydown", (e) => {
+  // Navigazione history
+  if (e.key === "ArrowUp") {
+    if (historyIndex > 0) {
+      historyIndex--;
+      input.value = history[historyIndex];
+      updateCaret();
+    }
+    e.preventDefault();
+    return;
+  }
+  if (e.key === "ArrowDown") {
+    if (historyIndex < history.length - 1) {
+      historyIndex++;
+      input.value = history[historyIndex];
+    } else {
+      historyIndex = history.length;
+      input.value = "";
+    }
+    updateCaret();
+    e.preventDefault();
+    return;
+  }
+
   if (e.key === "Enter") {
     executeCommand();
   }
 
-  // Aggiorna caret durante movimento
+  // Caret update and blink reset
   requestAnimationFrame(updateCaret);
   pauseBlink();
 });
