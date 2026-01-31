@@ -1,0 +1,163 @@
+/* =========================================================
+   RESET BASE + BODY
+   Imposta lo sfondo, il font e centra il terminale
+   ========================================================= */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: #050505;
+  color: #00ff88;
+
+  font-family: "Courier New", Courier, monospace;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =========================================================
+   CONTAINER TERMINALE
+   Struttura principale
+   ========================================================= */
+
+.terminal {
+  width: 90%;
+  max-width: 90%;
+  height: 80%;
+
+  padding: 20px;
+
+  border: 2px solid #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+
+  background: radial-gradient(circle at top, #0a0a0a, #020202);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+  user-select: none;
+}
+
+/* =========================================================
+   HEADER (ASCII / TITOLO)
+   ========================================================= */
+
+.header {
+  margin-bottom: 30px;
+  margin-left: -76px;
+
+  white-space: pre;
+
+  color: #00ffaa;
+  text-shadow: 0 0 5px #00ff88;
+
+  text-align: center;
+}
+
+/* =========================================================
+   LINEE, PROMPT, INPUT
+   Uniforma altezza e spaziatura
+   ========================================================= */
+
+.line,
+.prompt,
+.input-wrapper input {
+  line-height: 1.5em;
+  height: 1.5em;
+}
+
+.line {
+  min-height: 1.5em;
+  white-space: pre;
+}
+
+/* =========================================================
+   PROMPT
+   Riga di input ( > comando )
+   ========================================================= */
+
+.prompt {
+  display: flex;
+  align-items: center;
+
+  min-height: 1.4em;
+}
+
+/* =========================================================
+   CARET FALSO (LAMPEGGIANTE)
+   ========================================================= */
+
+.fake-caret {
+  position: absolute;
+
+  left: 7px;
+  top: 0px;
+
+  width: 0.7em;
+  height: 1.4em;
+
+  background: #00ff8894;
+
+  animation: blink 1s steps(1) infinite;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer {
+  margin-top: 20px;
+
+  font-size: 0.85em;
+  color: #00aa66;
+}
+
+/* =========================================================
+   INPUT WRAPPER
+   Contiene input + caret finto
+   ========================================================= */
+
+.input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+/* =========================================================
+   INPUT TESTUALE
+   ========================================================= */
+
+.input-wrapper input {
+  width: 100%;
+
+  background: transparent;
+  border: none;
+  outline: none;
+
+  color: #00ff88;
+  font-family: inherit;
+  font-size: 1em;
+
+  /* Nasconde il caret reale */
+  caret-color: transparent;
+
+  margin-left: 8px;
+}
+
+/* =========================================================
+   ANIMAZIONE CARET
+   ========================================================= */
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

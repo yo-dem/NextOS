@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <title>NextOS :: Terminal</title>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body oncontextmenu="return false;">
+    <div
+      class="terminal"
+      id="terminal"
+      onclick="document.getElementById('cmd').focus()"
+    >
+      <div class="header">
+        NEXTOS v0.9.7 ------------------------ SYSTEM READY
+      </div>
+
+      <div class="line">TYPE COMMAND:</div>
+      <div class="line"></div>
+
+      <div class="line">&gt; LS</div>
+      <div class="line">&gt; HELP</div>
+      <div class="line">&gt; CLEAR</div>
+      <div class="line"></div>
+
+      <div class="prompt">
+        <span>&gt; </span>
+
+        <div class="input-wrapper">
+          <input
+            id="cmd"
+            type="text"
+            autofocus
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <span class="fake-caret" id="caret"></span>
+        </div>
+      </div>
+
+      <div class="footer">
+        CONNECTION: STABLE<br />
+        MODE: INTERACTIVE
+      </div>
+    </div>
+
+    <script src="nextOS.js"></script>
+  </body>
+</html>
