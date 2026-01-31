@@ -1,3 +1,14 @@
+let currentUser = localStorage.getItem("currentUser")
+  ? JSON.parse(localStorage.getItem("currentUser"))
+  : {
+      username: "guest",
+      role: "guest",
+    };
+
+let isLoggingIn = false;
+let loginStep = 0;
+let loginUser = null;
+
 /* ================================
    STORIA COMANDI
 ================================ */
@@ -53,8 +64,8 @@ function getNode(pathArray) {
    PROMPT LOGIC
 ================================ */
 function getPrompt() {
-  if (cwd.length === 0) return ":> ";
-  return "/" + cwd.join("/") + ":> ";
+  if (cwd.length === 0) return "/" + currentUser.username + "/>: ";
+  return "/" + currentUser.username + "/" + cwd.join("/") + "/>: ";
 }
 
 // Aggiorna prompt e caret
@@ -80,9 +91,9 @@ function cmdLs() {
     const icon = item.type === "dir" ? "[dir]" : "[prg]";
 
     if (item.type === "app") {
-      print(`   ${name}  \t\t\t- ${icon} ${size} KB`);
+      print(`   ${name}  \t\t\t ${icon} ${size} KB`);
     } else {
-      print(`   ${name}  \t\t\t- ${icon}`);
+      print(`   ${name}  \t\t\t ${icon}`);
     }
   });
 }
@@ -112,11 +123,12 @@ function cmdHelp() {
   print("");
   print("AVAILABLE COMMANDS:");
   print("");
-  print(" ls              list directory");
-  print(" cd <dir>        change directory");
   print(" <app>           launch app");
+  print(" cd <dir>        change directory");
   print(" clear, cls      clear screen");
   print(" clock, time     show date and time");
+  print(" login           switch user");
+  print(" ls              list directory");
   print(" version, ver    show system version");
   print(" help            show help");
   print("");
@@ -136,9 +148,10 @@ function tryRunApp(name) {
 }
 
 /* ================================
-   BOOT SEQUENCE
+   BOOT SEQUENCE + LOGIN EMULATO
 ================================ */
-function bootSequence() {
+
+async function bootSequence() {
   const bootLines = [
     "Booting NextOS kernel...",
     " [OK]",
@@ -162,6 +175,8 @@ function bootSequence() {
   ];
 
   let index = 0;
+  // let loginStep = 0; // 0=username, 1=password
+  // let loginUser = null;
 
   function nextLine() {
     if (index < bootLines.length) {
@@ -173,18 +188,21 @@ function bootSequence() {
 
       setTimeout(() => {
         clearTerminal();
-        print(new Date().toLocaleString());
-        print("");
-        print("SYSTEM READY");
+        const promptEl = terminal.querySelector(".prompt");
+        if (promptEl) promptEl.classList.remove("hidden");
 
-        const prompt = terminal.querySelector(".prompt");
-        prompt.classList.remove("hidden");
         input.focus();
+
+        // ----------------------
+        // LOGIN EMULATO
+        // ----------------------
+        isLoggingIn = false;
 
         updatePrompt();
       }, 500);
     }
   }
+
   setTimeout(nextLine, 800);
 }
 
@@ -214,6 +232,9 @@ function print(text) {
 
 function clearTerminal() {
   terminal.querySelectorAll(".line").forEach((line) => line.remove());
+  print(new Date().toLocaleString());
+  print("SYSTEM READY");
+  print("");
 }
 
 /* ================================
@@ -298,6 +319,25 @@ function executeCommand() {
       clearTerminal();
       break;
 
+    case "reboot":
+      points = ".";
+      print("Rebooting system");
+      const promptEl = terminal.querySelector(".prompt");
+      if (promptEl) promptEl.classList.add("hidden");
+      setInterval(() => {
+        points += ".";
+        terminal.querySelectorAll(".line").forEach((line) => {
+          if (line.textContent.startsWith("Rebooting system")) {
+            line.textContent = "Rebooting system" + points;
+          }
+        });
+      }, 100);
+      setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+
+      break;
+
     case "time":
     case "clock":
       print(new Date().toLocaleString());
@@ -306,6 +346,19 @@ function executeCommand() {
     case "version":
     case "ver":
       print("NEXTOS v1.1.7 - Copyrights 1984-2026 Yodema Labs");
+      break;
+
+    case "login":
+      clearTerminal();
+
+      isLoggingIn = true;
+      loginStep = 0;
+      loginUser = null;
+
+      print("Insert username:");
+      print("");
+
+      updatePrompt();
       break;
 
     default:
@@ -317,6 +370,70 @@ function executeCommand() {
    EVENTI INPUT
 ================================ */
 input.addEventListener("keydown", (e) => {
+  // =====================
+  // LOGIN MODE
+  // =====================
+  if (isLoggingIn) {
+    if (e.key !== "Enter") return;
+
+    e.preventDefault();
+
+    const value = input.value.trim();
+    input.value = "";
+
+    // STEP 0: USERNAME
+    if (loginStep === 0) {
+      const user = fs.users.find((u) => u.username === value);
+
+      if (user) {
+        loginUser = user;
+        loginStep = 1;
+        clearTerminal();
+        print("Insert password: ");
+        print("");
+      } else {
+        print("User not found.");
+        print("login: please enter your username.");
+      }
+
+      return;
+    }
+
+    // STEP 1: PASSWORD
+    if (loginStep === 1) {
+      if (value === loginUser.password) {
+        currentUser = {
+          username: loginUser.username,
+          role: loginUser.role,
+        };
+
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+        clearTerminal();
+        print("");
+        print(`Access Granted. Welcome, ${currentUser.username}!`);
+        print("");
+
+        isLoggingIn = false;
+        loginStep = 0;
+        loginUser = null;
+
+        updatePrompt();
+      } else {
+        print("Access Denied.");
+        loginStep = 0;
+        loginUser = null;
+        print("login: please enter your username.");
+      }
+
+      return;
+    }
+  }
+
+  // =====================
+  // NORMAL COMMAND MODE
+  // =====================
+
   if (e.key === "ArrowUp") {
     if (historyIndex > 0) {
       historyIndex--;

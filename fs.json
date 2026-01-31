@@ -33,5 +33,9 @@
         }
       }
     }
-  }
+  },
+  "users": [
+    { "username": "admin", "password": "1234", "role": "admin" },
+    { "username": "guest", "password": "guest", "role": "guest" }
+  ]
 }
