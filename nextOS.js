@@ -1,71 +1,149 @@
 /* ================================
    STORIA COMANDI
 ================================ */
-
 const history = [];
 let historyIndex = -1;
 
 /* ================================
-   CONFIGURAZIONE APPLICAZIONI
+   FILESYSTEM VIRTUALE
 ================================ */
+let fs = null; // filesystem completo
+let cwd = []; // directory corrente
 
-const apps = {
-  GLITCH: "http://nextos.altervista.org/Glitch/",
-  BALL: "http://nextos.altervista.org/Ball/",
-  BUBBLE: "http://nextos.altervista.org/Bubble/",
-};
-
-const files = [
-  {
-    name: "GLITCH",
-    type: "file", // sempre file per ora
-    perms: "-exec", // stringa permessi
-    size: 4096, // dimensione in byte
-    mtime: "Sep 29 2025 15:23",
-  },
-  {
-    name: "BALL",
-    type: "file", // sempre file per ora
-    perms: "-exec",
-    size: 8192,
-    mtime: "Oct 14 2025 08:12",
-  },
-  {
-    name: "BUBBLE",
-    type: "file", // sempre file per ora
-    perms: "-exec",
-    size: 2048,
-    mtime: "Jan 02 2026 19:47",
-  },
-];
+// Carica filesystem da JSON
+async function loadFS() {
+  const res = await fetch("fs.json");
+  fs = await res.json();
+}
 
 /* ================================
-   RIFERIMENTI DOM
+   DOM ELEMENTS
 ================================ */
-
 const input = document.getElementById("cmd");
 const terminal = document.getElementById("terminal");
 const caret = document.getElementById("caret");
+const promptPath = document.getElementById("promptPath");
 
-// Disabilito l'inserimento di comandi all'inizio
 input.disabled = true;
 
 /* ================================
    AVVIO SISTEMA
 ================================ */
+async function startSystem() {
+  await loadFS();
+  bootSequence();
+}
 
-bootSequence();
+startSystem();
 
 /* ================================
-   SEQUENZA DI AVVIO
+   FILESYSTEM LOGIC
 ================================ */
+// Recupera nodo filesystem dato un path array
+function getNode(pathArray) {
+  let node = fs;
+  for (let part of pathArray) {
+    if (!node.children || !node.children[part]) return null;
+    node = node.children[part];
+  }
+  return node;
+}
 
+/* ================================
+   PROMPT LOGIC
+================================ */
+function getPrompt() {
+  if (cwd.length === 0) return ":> ";
+  return "/" + cwd.join("/") + ":> ";
+}
+
+// Aggiorna prompt e caret
+function updatePrompt() {
+  promptPath.textContent = getPrompt();
+  updateCaret();
+}
+
+/* ================================
+   COMANDI
+================================ */
+// Mostra contenuto directory
+function cmdLs() {
+  const node = getNode(cwd);
+  if (!node || !node.children) {
+    print("ls: not a directory");
+    return;
+  }
+
+  Object.keys(node.children).forEach((name) => {
+    const item = node.children[name];
+    const size = item.size ?? 0;
+    const icon = item.type === "dir" ? "[dir]" : "[prg]";
+
+    if (item.type === "app") {
+      print(`   ${name}  \t\t\t- ${icon} ${size} KB`);
+    } else {
+      print(`   ${name}  \t\t\t- ${icon}`);
+    }
+  });
+}
+
+// Cambia directory
+function cmdCd(arg) {
+  if (!arg) return;
+
+  if (arg === "..") {
+    cwd.pop();
+    updatePrompt();
+    return;
+  }
+
+  const test = getNode([...cwd, arg]);
+  if (!test || test.type !== "dir") {
+    print("cd: no such directory");
+    return;
+  }
+
+  cwd.push(arg);
+  updatePrompt();
+}
+
+// Mostra lista comandi disponibili
+function cmdHelp() {
+  print("");
+  print("AVAILABLE COMMANDS:");
+  print("");
+  print(" ls              list directory");
+  print(" cd <dir>        change directory");
+  print(" <app>           launch app");
+  print(" clear, cls      clear screen");
+  print(" clock, time     show date and time");
+  print(" version, ver    show system version");
+  print(" help            show help");
+  print("");
+}
+
+// Prova a eseguire un'app se esiste nella directory corrente
+function tryRunApp(name) {
+  const node = getNode([...cwd, name]);
+  if (!node || node.type !== "app") {
+    print(`Command not found: ${name}`);
+    return;
+  }
+
+  print("Launching " + name + "...");
+  window.open(node.url, "_blank");
+  print("done");
+}
+
+/* ================================
+   BOOT SEQUENCE
+================================ */
 function bootSequence() {
   const bootLines = [
     "Booting NextOS kernel...",
     " [OK]",
     "",
-    "Loading core modules: ",
+    "Loading core modules:",
     " [OK] MEMORY...",
     " [OK] IO...",
     " [OK] NETWORK...",
@@ -76,9 +154,8 @@ function bootSequence() {
     "Mounting file system...",
     " [OK]",
     "",
-    " [INFO] Establishing secure link with remote server: key exchange in progress...",
-    " [INFO] SERVER 404 AUTHENTICATED - LINK ESTABLISHED",
-    " [INFO] All system patches are up to date.",
+    " [INFO] Establishing secure link...",
+    " [INFO] SERVER AUTHENTICATED",
     "",
     "Finalizing boot sequence...",
     "",
@@ -88,82 +165,70 @@ function bootSequence() {
 
   function nextLine() {
     if (index < bootLines.length) {
-      appendLine(bootLines[index]);
-      index++;
-
-      setTimeout(nextLine, 200 + Math.random() * 400);
+      print(bootLines[index++]);
+      setTimeout(nextLine, 150 + Math.random() * 300);
     } else {
-      // Fine boot → abilita input
       input.disabled = false;
       input.focus();
 
-      // mostra il prompt
       setTimeout(() => {
         clearTerminal();
+        print(new Date().toLocaleString());
+        print("");
+        print("SYSTEM READY");
 
-        appendLine("" + new Date().toLocaleString());
-        appendLine("");
-        appendLine("SYSTEM READY");
         const prompt = terminal.querySelector(".prompt");
         prompt.classList.remove("hidden");
+        input.focus();
+
+        updatePrompt();
       }, 500);
     }
   }
-
-  // piccolo ritardo iniziale
   setTimeout(nextLine, 800);
 }
 
 /* ================================
-   VARIABILI DI STATO
+   TERMINALE
 ================================ */
-
-let blinkTimeout = null;
-
-/* ================================
-   FUNZIONI TERMINALE
-================================ */
-
-/**
- * Aggiunge una riga al terminale
- * prima del prompt
- */
 function appendLine(text) {
   const div = document.createElement("div");
   div.className = "line";
 
-  if (text.startsWith(" [INFO]")) {
+  // Colori per info e tipo
+  if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
+  if (text.startsWith("   [dir]")) div.style.color = "#2eb2bb";
+  if (text.startsWith("   [prg]")) div.style.color = "#bb982e";
+  if (text.startsWith("NEXTOS v0.9.7 - Copyrights 1984-2026 Yodema Labs"))
     div.style.color = "#2eb2bb";
-  }
 
-  // Evita righe "vuote" che collassano
   div.textContent = text && text.trim() !== "" ? text : "\u00A0";
 
   terminal.insertBefore(div, terminal.querySelector(".prompt"));
-
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-/**
- * Aggiorna la posizione del caret
- * in base al cursore reale
- */
-function updateCaret() {
-  const pos = input.selectionStart || 0;
-  caret.style.marginLeft = pos * 0.6 + "em";
+function print(text) {
+  appendLine(text);
+}
+
+function clearTerminal() {
+  terminal.querySelectorAll(".line").forEach((line) => line.remove());
 }
 
 /* ================================
-   GESTIONE BLINK CARET
+   CARET LOGIC
 ================================ */
+let blinkTimeout = null;
 
-/**
- * Ferma temporaneamente il blink
- * e lo riattiva dopo inattività
- */
+function updateCaret() {
+  const pos = input.selectionStart || 0;
+  const promptLen = promptPath.textContent.length;
+  caret.style.marginLeft = (promptLen + pos) * 0.6 + "em";
+}
+
 function pauseBlink() {
   caret.style.animation = "none";
-
   clearTimeout(blinkTimeout);
 
   blinkTimeout = setTimeout(() => {
@@ -172,93 +237,86 @@ function pauseBlink() {
 }
 
 /* ================================
-   GESTIONE COMANDI
+   COMMAND PARSER
 ================================ */
-
-/**
- * Esegue il comando inserito
- */
 function executeCommand() {
   const raw = input.value.trim();
-  // Aggiunge alla history solo se non vuoto
+
   if (raw !== "") {
     history.push(raw);
-    historyIndex = history.length; // reset index
+    historyIndex = history.length;
   }
-  const cmd = raw.toUpperCase();
+
+  // Stampa la riga del comando nel terminale
+  function printPrompt(command) {
+    const line = document.createElement("div");
+    line.className = "line";
+
+    const pathSpan = document.createElement("span");
+    pathSpan.className = "prompt-path";
+    pathSpan.textContent = getPrompt();
+
+    const cmdSpan = document.createElement("span");
+    cmdSpan.textContent = command;
+
+    line.appendChild(pathSpan);
+    line.appendChild(cmdSpan);
+
+    terminal.insertBefore(line, terminal.querySelector(".prompt"));
+    terminal.scrollTop = terminal.scrollHeight;
+  }
 
   input.value = "";
   updateCaret();
 
-  // Echo del comando
-  appendLine("> " + raw);
-
-  // Avvio applicazione
-  if (apps[cmd]) {
-    appendLine("Launching " + raw + "...");
-    window.open(apps[cmd], "_blank");
-    appendLine("done");
+  if (!raw) {
+    printPrompt("");
     return;
   }
 
-  // Comandi interni
+  const parts = raw.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const arg = parts[1];
+
+  printPrompt(raw);
+
   switch (cmd) {
-    case "LS":
-      appendLine(" ");
-      appendLine("total " + files.length + " files found");
-      appendLine("");
-
-      files.forEach((f) => {
-        // formatta dimensione in KB se più grande di 1024
-        const size =
-          f.size > 1024 ? (f.size / 1024).toFixed(1) + "K" : f.size + "B";
-
-        const line =
-          `${f.perms}` + `${size.padStart(6, " ")} ${f.mtime} ${f.name}`;
-
-        appendLine(line);
-      });
-
-      appendLine(" ");
+    case "ls":
+      cmdLs();
       break;
 
-    case "HELP":
-      appendLine("");
-      appendLine("AVAILABLE COMMANDS:");
-      appendLine("");
-      appendLine(" [  LS     ] -> list applications");
-      appendLine(" [  HELP   ] -> show this message");
-      appendLine(" [  <APP>  ] -> launch application");
-      appendLine(" [  CLEAR  ] -> clear screen");
-      appendLine("");
+    case "cd":
+      cmdCd(arg);
       break;
 
-    case "CLEAR":
+    case "help":
+      cmdHelp();
+      break;
+
+    case "clear":
+    case "cls":
       clearTerminal();
       break;
 
-    default:
-      appendLine("Command not found. Type 'HELP' for list.");
+    case "time":
+    case "clock":
+      print(new Date().toLocaleString());
       break;
+
+    case "version":
+    case "ver":
+      print("NEXTOS v1.1.7 - Copyrights 1984-2026 Yodema Labs");
+      break;
+
+    default:
+      tryRunApp(cmd);
   }
 }
 
-/**
- * Pulisce tutte le righe del terminale
- */
-function clearTerminal() {
-  terminal.querySelectorAll(".line").forEach((line) => line.remove());
-}
-
 /* ================================
-   EVENT LISTENERS
+   EVENTI INPUT
 ================================ */
-
-/**
- * Invio comando con ENTER
- */
 input.addEventListener("keydown", (e) => {
-  // Navigazione history
   if (e.key === "ArrowUp") {
     if (historyIndex > 0) {
       historyIndex--;
@@ -268,6 +326,7 @@ input.addEventListener("keydown", (e) => {
     e.preventDefault();
     return;
   }
+
   if (e.key === "ArrowDown") {
     if (historyIndex < history.length - 1) {
       historyIndex++;
@@ -281,37 +340,21 @@ input.addEventListener("keydown", (e) => {
     return;
   }
 
-  if (e.key === "Enter") {
-    executeCommand();
-  }
+  if (e.key === "Enter") executeCommand();
 
-  // Caret update and blink reset
   requestAnimationFrame(updateCaret);
   pauseBlink();
 });
 
-/**
- * Input testuale
- */
 input.addEventListener("input", () => {
   updateCaret();
   pauseBlink();
 });
 
-/**
- * Click nel campo
- */
 input.addEventListener("click", () => {
   updateCaret();
   pauseBlink();
 });
 
-/* ================================
-   AGGIORNAMENTO CONTINUO CARET
-================================ */
-
-/**
- * Mantiene il caret sincronizzato
- * anche in casi edge (auto-repeat)
- */
+// Aggiornamento continuo caret
 setInterval(updateCaret, 16);

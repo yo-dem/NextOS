@@ -1,0 +1,37 @@
+{
+  "name": "/",
+  "type": "dir",
+  "children": {
+    "apps": {
+      "type": "dir",
+      "children": {
+        "glitch": {
+          "type": "app",
+          "size": 2048,
+          "url": "http://nextos.altervista.org/Glitch/"
+        },
+        "ball": {
+          "type": "app",
+          "size": 1024,
+          "url": "http://nextos.altervista.org/Ball/"
+        },
+        "bubble": {
+          "type": "app",
+          "size": 4096,
+          "url": "http://nextos.altervista.org/Bubble/"
+        }
+      }
+    },
+
+    "blog": {
+      "type": "dir",
+      "children": {
+        "google": {
+          "type": "app",
+          "size": 512,
+          "url": "https://www.google.com"
+        }
+      }
+    }
+  }
+}

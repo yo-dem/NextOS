@@ -13,13 +13,15 @@
       id="terminal"
       onclick="document.getElementById('cmd').focus()"
     >
-      <div class="header">NEXTOS v0.9.7 - Copyrights 1984</div>
+      <div class="header">NEXTOS v1.1.7 - Copyrights 1984</div>
+
       <div class="line"></div>
 
+      <!-- PROMPT ATTIVO -->
       <div class="prompt hidden">
-        <span>&gt; </span>
-
         <div class="input-wrapper">
+          <span class="prompt-path" id="promptPath"></span>
+
           <input
             id="cmd"
             type="text"
@@ -28,14 +30,11 @@
             autocapitalize="off"
             spellcheck="false"
           />
+
           <span class="fake-caret" id="caret"></span>
         </div>
       </div>
-
-      <!-- <div class="footer">
-        CONNECTION: STABLE<br />
-        MODE: INTERACTIVE
-      </div> -->
+      <!-- /PROMPT -->
     </div>
 
     <script src="nextOS.js"></script>
