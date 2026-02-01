@@ -5,11 +5,6 @@
     "apps": {
       "type": "dir",
       "children": {
-        "glitch": {
-          "type": "app",
-          "size": 2048,
-          "url": "http://nextos.altervista.org/Glitch/"
-        },
         "ball": {
           "type": "app",
           "size": 1024,
@@ -17,25 +12,37 @@
         },
         "bubble": {
           "type": "app",
-          "size": 4096,
+          "size": 202,
           "url": "http://nextos.altervista.org/Bubble/"
+        },
+        "glitch": {
+          "type": "app",
+          "size": 2048,
+          "url": "http://nextos.altervista.org/Glitch/"
         }
       }
     },
-
     "blog": {
       "type": "dir",
       "children": {
         "google": {
           "type": "app",
-          "size": 512,
-          "url": "https://www.google.com"
+          "size": 15,
+          "url": "https://google.com"
         }
       }
     }
   },
   "users": [
-    { "username": "admin", "password": "1234", "role": "admin" },
-    { "username": "guest", "password": "guest", "role": "guest" }
+    {
+      "username": "admin",
+      "password": "admin",
+      "role": "admin"
+    },
+    {
+      "username": "guest",
+      "password": "guest",
+      "role": "guest"
+    }
   ]
 }

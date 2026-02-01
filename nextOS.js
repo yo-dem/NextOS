@@ -1,7 +1,9 @@
 /* ==================================================
-   NEXTOS TERMINAL - REFACTORED VERSION
-   Cleaned, ordered, and commented
+   NEXTOS TERMINAL - YODEMA LABS 1984-2026
+   VERSION 1.1.7
    ================================================== */
+
+const version = "v1.1.7";
 
 /* ==================================================
    USER SESSION
@@ -58,13 +60,11 @@ startSystem();
    FILESYSTEM LOADING & ACCESS
    ================================================== */
 
-// Load filesystem from JSON
 async function loadFS() {
   const res = await fetch("fs.json");
   fs = await res.json();
 }
 
-// Retrieve filesystem node from path array
 function getNode(pathArray) {
   let node = fs;
 
@@ -80,7 +80,6 @@ function getNode(pathArray) {
    PROMPT MANAGEMENT
    ================================================== */
 
-// Generate prompt string
 function getPrompt() {
   const base = `/${currentUser.username}`;
 
@@ -99,16 +98,14 @@ function updatePrompt() {
    TERMINAL OUTPUT
    ================================================== */
 
-// Append a generic line
 function appendLine(text) {
   const div = document.createElement("div");
   div.className = "line";
 
   // Color rules
   if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
-  if (text.startsWith("   [dir]")) div.style.color = "#2eb2bb";
-  if (text.startsWith("   [prg]")) div.style.color = "#bb982e";
-  if (text.startsWith("NEXTOS")) div.style.color = "#2eb2bb";
+  // if (text.includes("   [dir]")) div.style.color = "#a4a7da";
+  // if (text.includes("   [prg]")) div.style.color = "#f0c58c";
 
   div.textContent = text && text.trim() !== "" ? text : "\u00A0";
 
@@ -133,7 +130,6 @@ function clearTerminal() {
    FILESYSTEM COMMANDS
    ================================================== */
 
-// List directory
 function cmdLs() {
   const node = getNode(cwd);
 
@@ -142,16 +138,33 @@ function cmdLs() {
     return;
   }
 
+  let fileCount = 0;
+  let dirCount = 0;
+
+  const COL_WIDTH = 40; // larghezza colonna nome
+
+  print("");
+  const parent1Padded = ".".padEnd(COL_WIDTH);
+  print(`   ${parent1Padded}[*]`);
+  const parent2Padded = "..".padEnd(COL_WIDTH);
+  print(`   ${parent2Padded}[*]`);
+
   Object.entries(node.children).forEach(([name, item]) => {
     const size = item.size ?? 0;
     const icon = item.type === "dir" ? "[dir]" : "[prg]";
 
-    if (item.type === "app") {
-      print(`   ${name}\t\t ${icon} ${size} KB`);
+    const paddedName = name.padEnd(COL_WIDTH);
+
+    if (item.type === "dir") {
+      dirCount++;
+      print(`   ${paddedName}${icon}`);
     } else {
-      print(`   ${name}\t\t ${icon}`);
+      fileCount++;
+      print(`   ${paddedName}${icon} ${size} KB`);
     }
   });
+  print("");
+  print(`   ${dirCount} directory(s), ${fileCount} file(s)`);
 }
 
 // Change directory
@@ -180,17 +193,17 @@ function cmdCd(arg) {
    ================================================== */
 
 function cmdHelp() {
-  print("");
-  print("AVAILABLE COMMANDS:");
-  print("");
-  print(" <app>           launch app");
-  print(" cd <dir>        change directory");
-  print(" clear, cls      clear screen");
-  print(" clock, time     show date and time");
-  print(" login           switch user");
-  print(" ls              list directory");
-  print(" version, ver    show system version");
-  print(" help            show help");
+  print(" AVAILABLE COMMANDS:");
+  print("   <app>           launch app");
+  print("   cd <dir>        change directory");
+  print("   clear, cls      clear screen");
+  print("   clock, time     show date and time");
+  print("   login           switch user");
+  print("   logout          logout current user");
+  print("   reboot          reboot system");
+  print("   ls              list directory");
+  print("   version, ver    show system version");
+  print("   help            show help");
   print("");
 }
 
@@ -198,31 +211,108 @@ function tryRunApp(name) {
   const node = getNode([...cwd, name]);
 
   if (!node || node.type !== "app") {
-    print(`Command not found: ${name}`);
+    print(` Command not found: ${name}`);
+    print("");
     return;
   }
 
   print("Launching " + name + "...");
   window.open(node.url, "_blank");
   print("done");
+  print("");
 }
 
 function cmdReboot() {
-  points = ".";
-  print("Rebooting system");
+  cmdLogout();
+
   const promptEl = terminal.querySelector(".prompt");
   if (promptEl) promptEl.classList.add("hidden");
-  setInterval(() => {
-    points += ".";
-    terminal.querySelectorAll(".line").forEach((line) => {
-      if (line.textContent.startsWith("Rebooting system")) {
-        line.textContent = "Rebooting system" + points;
-      }
-    });
-  }, 100);
-  setTimeout(() => {
-    window.location.reload();
-  }, 5000);
+
+  const shutdownMessages = [
+    "Shutting down modules...",
+    " [OK] NETWORK...",
+    " [OK] IO...",
+    " [OK] MEMORY...",
+    "",
+    " [INFO] Switching to user: " + currentUser.username,
+    " [INFO] All temporary files cleared.",
+    " [INFO] System state saved successfully.",
+    "",
+    " Saving system state...",
+    "",
+    " [INFO] System state saved [OK] Preparing for reboot...",
+    "",
+  ];
+
+  let index = 0;
+
+  clearTerminal();
+  print("Rebooting system");
+  print("");
+
+  function printNextMessage() {
+    if (index >= shutdownMessages.length) {
+      print("");
+      print("Press any key to start system...");
+      waitForKeyPress(startSystem); // funzione che riavvia il boot
+      return;
+    }
+
+    const msg = shutdownMessages[index];
+
+    // Se è il messaggio di salvataggio sistema, facciamo progress dinamico
+    if (msg === " Saving system state...") {
+      print(msg);
+      simulateProgress(() => {
+        index++;
+        printNextMessage();
+      });
+    } else {
+      print(msg);
+      index++;
+      const delay = 400 + Math.random() * 800;
+      setTimeout(printNextMessage, delay);
+    }
+  }
+
+  printNextMessage();
+}
+
+/* ================================
+   Funzione progress dinamico
+================================ */
+
+function simulateProgress(callback) {
+  let percent = 0;
+
+  function step() {
+    if (percent > 100) {
+      callback();
+      return;
+    }
+
+    const progressLine = ` Saving system state... ${percent}%`;
+    print(progressLine);
+    percent += Math.floor(10 + Math.random() * 20); // incremento casuale
+
+    const delay = 200 + Math.random() * 300;
+    setTimeout(step, delay);
+  }
+
+  step();
+}
+
+/* ================================
+   Funzione per rilevare un tasto
+================================ */
+
+function waitForKeyPress(callback) {
+  function handler(e) {
+    document.removeEventListener("keydown", handler);
+    terminal.querySelectorAll(".line").forEach((l) => l.remove());
+    callback();
+  }
+  document.addEventListener("keydown", handler);
 }
 
 /* ==================================================
@@ -242,11 +332,10 @@ function bootSequence() {
     "Checking devices...",
     " [OK]",
     "",
-    "Mounting file system...",
-    " [OK]",
     "",
     " [INFO] Establishing secure link...",
-    " [INFO] SERVER AUTHENTICATED",
+    " [INFO] Server authenticated.",
+    " [INFO] Virtual filesystem mounted",
     "",
     "Finalizing boot sequence...",
     "",
@@ -341,6 +430,7 @@ function executeCommand() {
   switch (cmd.toLowerCase()) {
     case "ls":
       cmdLs();
+      print("");
       break;
 
     case "cd":
@@ -356,18 +446,24 @@ function executeCommand() {
       clearTerminal();
       break;
 
+    case "logout":
+      cmdLogout();
+      break;
+
     case "reboot":
       cmdReboot();
       break;
 
     case "time":
     case "clock":
-      print(new Date().toLocaleString());
+      print(" " + new Date().toLocaleString());
+      print("");
       break;
 
     case "version":
     case "ver":
-      print("NEXTOS v1.1.7 - Copyrights 1984-2026 Yodema Labs");
+      print(" " + "NEXTOS TERMINAL " + version + " - YODEMA LABS 1984-2026");
+      print("");
       break;
 
     case "login":
@@ -443,6 +539,22 @@ function resetLogin() {
   isLoggingIn = false;
   loginStep = 0;
   loginUser = null;
+}
+
+function cmdLogout() {
+  currentUser = {
+    username: "guest",
+    role: "guest",
+  };
+
+  localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+  clearTerminal();
+  print("Logged out. Welcome guest.");
+  print("");
+
+  cwd = [];
+  updatePrompt();
 }
 
 /* ==================================================

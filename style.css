@@ -11,7 +11,7 @@ body {
   height: 100%;
 
   background: #0f0f0f;
-  color: #00ff88;
+  color: #00ff88be;
 
   font-family: "Courier New", Courier, monospace;
 
@@ -90,7 +90,7 @@ body {
    ========================================================= */
 
 .prompt-path {
-  color: #62ff5f;
+  color: #3cff01;
   font-weight: bold;
   white-space: pre;
 }
@@ -106,7 +106,7 @@ body {
   border: none;
   outline: none;
 
-  color: #00ff88;
+  color: #00ff88be;
   font-family: inherit;
   font-size: 1em;
 
