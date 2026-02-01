@@ -1,3 +1,12 @@
+/* ==================================================
+   NEXTOS TERMINAL - REFACTORED VERSION
+   Cleaned, ordered, and commented
+   ================================================== */
+
+/* ==================================================
+   USER SESSION
+   ================================================== */
+
 let currentUser = localStorage.getItem("currentUser")
   ? JSON.parse(localStorage.getItem("currentUser"))
   : {
@@ -9,27 +18,24 @@ let isLoggingIn = false;
 let loginStep = 0;
 let loginUser = null;
 
-/* ================================
-   STORIA COMANDI
-================================ */
+/* ==================================================
+   COMMAND HISTORY
+   ================================================== */
+
 const history = [];
 let historyIndex = -1;
 
-/* ================================
-   FILESYSTEM VIRTUALE
-================================ */
-let fs = null; // filesystem completo
-let cwd = []; // directory corrente
+/* ==================================================
+   FILESYSTEM STATE
+   ================================================== */
 
-// Carica filesystem da JSON
-async function loadFS() {
-  const res = await fetch("fs.json");
-  fs = await res.json();
-}
+let fs = null; // filesystem root
+let cwd = []; // current working directory
 
-/* ================================
-   DOM ELEMENTS
-================================ */
+/* ==================================================
+   DOM REFERENCES
+   ================================================== */
+
 const input = document.getElementById("cmd");
 const terminal = document.getElementById("terminal");
 const caret = document.getElementById("caret");
@@ -37,9 +43,10 @@ const promptPath = document.getElementById("promptPath");
 
 input.disabled = true;
 
-/* ================================
-   AVVIO SISTEMA
-================================ */
+/* ==================================================
+   SYSTEM BOOT
+   ================================================== */
+
 async function startSystem() {
   await loadFS();
   bootSequence();
@@ -47,58 +54,107 @@ async function startSystem() {
 
 startSystem();
 
-/* ================================
-   FILESYSTEM LOGIC
-================================ */
-// Recupera nodo filesystem dato un path array
+/* ==================================================
+   FILESYSTEM LOADING & ACCESS
+   ================================================== */
+
+// Load filesystem from JSON
+async function loadFS() {
+  const res = await fetch("fs.json");
+  fs = await res.json();
+}
+
+// Retrieve filesystem node from path array
 function getNode(pathArray) {
   let node = fs;
-  for (let part of pathArray) {
+
+  for (const part of pathArray) {
     if (!node.children || !node.children[part]) return null;
     node = node.children[part];
   }
+
   return node;
 }
 
-/* ================================
-   PROMPT LOGIC
-================================ */
+/* ==================================================
+   PROMPT MANAGEMENT
+   ================================================== */
+
+// Generate prompt string
 function getPrompt() {
-  if (cwd.length === 0) return "/" + currentUser.username + "/>: ";
-  return "/" + currentUser.username + "/" + cwd.join("/") + "/>: ";
+  const base = `/${currentUser.username}`;
+
+  if (cwd.length === 0) return base + "/>: ";
+
+  return base + "/" + cwd.join("/") + "/>: ";
 }
 
-// Aggiorna prompt e caret
+// Update prompt and caret
 function updatePrompt() {
   promptPath.textContent = getPrompt();
   updateCaret();
 }
 
-/* ================================
-   COMANDI
-================================ */
-// Mostra contenuto directory
+/* ==================================================
+   TERMINAL OUTPUT
+   ================================================== */
+
+// Append a generic line
+function appendLine(text) {
+  const div = document.createElement("div");
+  div.className = "line";
+
+  // Color rules
+  if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
+  if (text.startsWith("   [dir]")) div.style.color = "#2eb2bb";
+  if (text.startsWith("   [prg]")) div.style.color = "#bb982e";
+  if (text.startsWith("NEXTOS")) div.style.color = "#2eb2bb";
+
+  div.textContent = text && text.trim() !== "" ? text : "\u00A0";
+
+  terminal.insertBefore(div, terminal.querySelector(".prompt"));
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function print(text) {
+  appendLine(text);
+}
+
+// Clear screen and print banner
+function clearTerminal() {
+  terminal.querySelectorAll(".line").forEach((l) => l.remove());
+
+  print(new Date().toLocaleString());
+  print("SYSTEM READY");
+  print("");
+}
+
+/* ==================================================
+   FILESYSTEM COMMANDS
+   ================================================== */
+
+// List directory
 function cmdLs() {
   const node = getNode(cwd);
+
   if (!node || !node.children) {
     print("ls: not a directory");
     return;
   }
 
-  Object.keys(node.children).forEach((name) => {
-    const item = node.children[name];
+  Object.entries(node.children).forEach(([name, item]) => {
     const size = item.size ?? 0;
     const icon = item.type === "dir" ? "[dir]" : "[prg]";
 
     if (item.type === "app") {
-      print(`   ${name}  \t\t\t ${icon} ${size} KB`);
+      print(`   ${name}\t\t ${icon} ${size} KB`);
     } else {
-      print(`   ${name}  \t\t\t ${icon}`);
+      print(`   ${name}\t\t ${icon}`);
     }
   });
 }
 
-// Cambia directory
+// Change directory
 function cmdCd(arg) {
   if (!arg) return;
 
@@ -108,8 +164,9 @@ function cmdCd(arg) {
     return;
   }
 
-  const test = getNode([...cwd, arg]);
-  if (!test || test.type !== "dir") {
+  const target = getNode([...cwd, arg]);
+
+  if (!target || target.type !== "dir") {
     print("cd: no such directory");
     return;
   }
@@ -118,7 +175,10 @@ function cmdCd(arg) {
   updatePrompt();
 }
 
-// Mostra lista comandi disponibili
+/* ==================================================
+   SYSTEM COMMANDS
+   ================================================== */
+
 function cmdHelp() {
   print("");
   print("AVAILABLE COMMANDS:");
@@ -134,9 +194,9 @@ function cmdHelp() {
   print("");
 }
 
-// Prova a eseguire un'app se esiste nella directory corrente
 function tryRunApp(name) {
   const node = getNode([...cwd, name]);
+
   if (!node || node.type !== "app") {
     print(`Command not found: ${name}`);
     return;
@@ -147,11 +207,29 @@ function tryRunApp(name) {
   print("done");
 }
 
-/* ================================
-   BOOT SEQUENCE + LOGIN EMULATO
-================================ */
+function cmdReboot() {
+  points = ".";
+  print("Rebooting system");
+  const promptEl = terminal.querySelector(".prompt");
+  if (promptEl) promptEl.classList.add("hidden");
+  setInterval(() => {
+    points += ".";
+    terminal.querySelectorAll(".line").forEach((line) => {
+      if (line.textContent.startsWith("Rebooting system")) {
+        line.textContent = "Rebooting system" + points;
+      }
+    });
+  }, 100);
+  setTimeout(() => {
+    window.location.reload();
+  }, 5000);
+}
 
-async function bootSequence() {
+/* ==================================================
+   BOOT SEQUENCE
+   ================================================== */
+
+function bootSequence() {
   const bootLines = [
     "Booting NextOS kernel...",
     " [OK]",
@@ -175,28 +253,21 @@ async function bootSequence() {
   ];
 
   let index = 0;
-  // let loginStep = 0; // 0=username, 1=password
-  // let loginUser = null;
 
   function nextLine() {
     if (index < bootLines.length) {
       print(bootLines[index++]);
       setTimeout(nextLine, 150 + Math.random() * 300);
     } else {
-      input.disabled = false;
-      input.focus();
-
       setTimeout(() => {
         clearTerminal();
+
         const promptEl = terminal.querySelector(".prompt");
         if (promptEl) promptEl.classList.remove("hidden");
 
-        input.focus();
-
-        // ----------------------
-        // LOGIN EMULATO
-        // ----------------------
         isLoggingIn = false;
+        input.disabled = false;
+        input.focus();
 
         updatePrompt();
       }, 500);
@@ -206,45 +277,16 @@ async function bootSequence() {
   setTimeout(nextLine, 800);
 }
 
-/* ================================
-   TERMINALE
-================================ */
-function appendLine(text) {
-  const div = document.createElement("div");
-  div.className = "line";
+/* ==================================================
+   CARET MANAGEMENT
+   ================================================== */
 
-  // Colori per info e tipo
-  if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
-  if (text.startsWith("   [dir]")) div.style.color = "#2eb2bb";
-  if (text.startsWith("   [prg]")) div.style.color = "#bb982e";
-  if (text.startsWith("NEXTOS v0.9.7 - Copyrights 1984-2026 Yodema Labs"))
-    div.style.color = "#2eb2bb";
-
-  div.textContent = text && text.trim() !== "" ? text : "\u00A0";
-
-  terminal.insertBefore(div, terminal.querySelector(".prompt"));
-  terminal.scrollTop = terminal.scrollHeight;
-}
-
-function print(text) {
-  appendLine(text);
-}
-
-function clearTerminal() {
-  terminal.querySelectorAll(".line").forEach((line) => line.remove());
-  print(new Date().toLocaleString());
-  print("SYSTEM READY");
-  print("");
-}
-
-/* ================================
-   CARET LOGIC
-================================ */
 let blinkTimeout = null;
 
 function updateCaret() {
   const pos = input.selectionStart || 0;
   const promptLen = promptPath.textContent.length;
+
   caret.style.marginLeft = (promptLen + pos) * 0.6 + "em";
 }
 
@@ -257,51 +299,46 @@ function pauseBlink() {
   }, 600);
 }
 
-/* ================================
-   COMMAND PARSER
-================================ */
+/* ==================================================
+   COMMAND EXECUTION
+   ================================================== */
+
+function printPrompt(command) {
+  const line = document.createElement("div");
+  line.className = "line";
+
+  const pathSpan = document.createElement("span");
+  pathSpan.className = "prompt-path";
+  pathSpan.textContent = getPrompt();
+
+  const cmdSpan = document.createElement("span");
+  cmdSpan.textContent = command;
+
+  line.appendChild(pathSpan);
+  line.appendChild(cmdSpan);
+
+  terminal.insertBefore(line, terminal.querySelector(".prompt"));
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
 function executeCommand() {
   const raw = input.value.trim();
 
-  if (raw !== "") {
+  if (raw) {
     history.push(raw);
     historyIndex = history.length;
-  }
-
-  // Stampa la riga del comando nel terminale
-  function printPrompt(command) {
-    const line = document.createElement("div");
-    line.className = "line";
-
-    const pathSpan = document.createElement("span");
-    pathSpan.className = "prompt-path";
-    pathSpan.textContent = getPrompt();
-
-    const cmdSpan = document.createElement("span");
-    cmdSpan.textContent = command;
-
-    line.appendChild(pathSpan);
-    line.appendChild(cmdSpan);
-
-    terminal.insertBefore(line, terminal.querySelector(".prompt"));
-    terminal.scrollTop = terminal.scrollHeight;
   }
 
   input.value = "";
   updateCaret();
 
-  if (!raw) {
-    printPrompt("");
-    return;
-  }
-
-  const parts = raw.split(/\s+/);
-  const cmd = parts[0].toLowerCase();
-  const arg = parts[1];
-
   printPrompt(raw);
 
-  switch (cmd) {
+  if (!raw) return;
+
+  const [cmd, arg] = raw.split(/\s+/);
+
+  switch (cmd.toLowerCase()) {
     case "ls":
       cmdLs();
       break;
@@ -320,22 +357,7 @@ function executeCommand() {
       break;
 
     case "reboot":
-      points = ".";
-      print("Rebooting system");
-      const promptEl = terminal.querySelector(".prompt");
-      if (promptEl) promptEl.classList.add("hidden");
-      setInterval(() => {
-        points += ".";
-        terminal.querySelectorAll(".line").forEach((line) => {
-          if (line.textContent.startsWith("Rebooting system")) {
-            line.textContent = "Rebooting system" + points;
-          }
-        });
-      }, 100);
-      setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-
+      cmdReboot();
       break;
 
     case "time":
@@ -349,16 +371,7 @@ function executeCommand() {
       break;
 
     case "login":
-      clearTerminal();
-
-      isLoggingIn = true;
-      loginStep = 0;
-      loginUser = null;
-
-      print("Insert username:");
-      print("");
-
-      updatePrompt();
+      startLogin();
       break;
 
     default:
@@ -366,13 +379,78 @@ function executeCommand() {
   }
 }
 
-/* ================================
-   EVENTI INPUT
-================================ */
+/* ==================================================
+   LOGIN SYSTEM
+   ================================================== */
+
+function startLogin() {
+  clearTerminal();
+
+  isLoggingIn = true;
+  loginStep = 0;
+  loginUser = null;
+
+  print("Insert username:");
+  print("");
+}
+
+function handleLogin(value) {
+  // USERNAME
+  if (loginStep === 0) {
+    const user = fs.users.find((u) => u.username === value);
+
+    if (!user) {
+      print("User not found.");
+      print("login: please enter your username.");
+      return;
+    }
+
+    loginUser = user;
+    loginStep = 1;
+
+    clearTerminal();
+    print("Insert password:");
+    print("");
+    return;
+  }
+
+  // PASSWORD
+  if (loginStep === 1) {
+    if (value !== loginUser.password) {
+      print("Access Denied.");
+      resetLogin();
+      return;
+    }
+
+    currentUser = {
+      username: loginUser.username,
+      role: loginUser.role,
+    };
+
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+
+    clearTerminal();
+
+    print(`Access Granted. Welcome, ${currentUser.username}!`);
+    print("");
+
+    resetLogin();
+    updatePrompt();
+  }
+}
+
+function resetLogin() {
+  isLoggingIn = false;
+  loginStep = 0;
+  loginUser = null;
+}
+
+/* ==================================================
+   INPUT EVENTS
+   ================================================== */
+
 input.addEventListener("keydown", (e) => {
-  // =====================
-  // LOGIN MODE
-  // =====================
+  /* LOGIN MODE */
   if (isLoggingIn) {
     if (e.key !== "Enter") return;
 
@@ -381,65 +459,18 @@ input.addEventListener("keydown", (e) => {
     const value = input.value.trim();
     input.value = "";
 
-    // STEP 0: USERNAME
-    if (loginStep === 0) {
-      const user = fs.users.find((u) => u.username === value);
-
-      if (user) {
-        loginUser = user;
-        loginStep = 1;
-        clearTerminal();
-        print("Insert password: ");
-        print("");
-      } else {
-        print("User not found.");
-        print("login: please enter your username.");
-      }
-
-      return;
-    }
-
-    // STEP 1: PASSWORD
-    if (loginStep === 1) {
-      if (value === loginUser.password) {
-        currentUser = {
-          username: loginUser.username,
-          role: loginUser.role,
-        };
-
-        localStorage.setItem("currentUser", JSON.stringify(currentUser));
-
-        clearTerminal();
-        print("");
-        print(`Access Granted. Welcome, ${currentUser.username}!`);
-        print("");
-
-        isLoggingIn = false;
-        loginStep = 0;
-        loginUser = null;
-
-        updatePrompt();
-      } else {
-        print("Access Denied.");
-        loginStep = 0;
-        loginUser = null;
-        print("login: please enter your username.");
-      }
-
-      return;
-    }
+    handleLogin(value);
+    return;
   }
 
-  // =====================
-  // NORMAL COMMAND MODE
-  // =====================
-
+  /* HISTORY NAVIGATION */
   if (e.key === "ArrowUp") {
     if (historyIndex > 0) {
       historyIndex--;
       input.value = history[historyIndex];
       updateCaret();
     }
+
     e.preventDefault();
     return;
   }
@@ -452,11 +483,13 @@ input.addEventListener("keydown", (e) => {
       historyIndex = history.length;
       input.value = "";
     }
+
     updateCaret();
     e.preventDefault();
     return;
   }
 
+  /* COMMAND EXECUTION */
   if (e.key === "Enter") executeCommand();
 
   requestAnimationFrame(updateCaret);
@@ -473,5 +506,8 @@ input.addEventListener("click", () => {
   pauseBlink();
 });
 
-// Aggiornamento continuo caret
+/* ==================================================
+   CARET REFRESH LOOP
+   ================================================== */
+
 setInterval(updateCaret, 16);
