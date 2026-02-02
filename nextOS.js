@@ -3,7 +3,7 @@
    VERSION 1.1.7
    ================================================== */
 
-const version = "v1.1.7";
+const versionNumber = "v1.1.7";
 
 /* ==================================================
    USER SESSION
@@ -37,13 +37,14 @@ let cwd = []; // current working directory
 /* ==================================================
    DOM REFERENCES
    ================================================== */
-
+const version = document.getElementById("version");
 const input = document.getElementById("cmd");
 const terminal = document.getElementById("terminal");
 const caret = document.getElementById("caret");
 const promptPath = document.getElementById("promptPath");
 
 input.disabled = true;
+version.innerText = "NextOS " + versionNumber + " - Copyrights 1984-2026";
 
 /* ==================================================
    SYSTEM BOOT

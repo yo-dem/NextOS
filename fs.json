@@ -8,17 +8,17 @@
         "ball": {
           "type": "app",
           "size": 1024,
-          "url": "http://nextos.altervista.org/Ball/"
+          "url": "https://server404.it/apps/Ball/"
         },
         "bubble": {
           "type": "app",
           "size": 202,
-          "url": "http://nextos.altervista.org/Bubble/"
+          "url": "https://server404.it/apps/Bubble/"
         },
         "glitch": {
           "type": "app",
           "size": 2048,
-          "url": "http://nextos.altervista.org/Glitch/"
+          "url": "https://server404.it/apps/Glitch/"
         }
       }
     },
