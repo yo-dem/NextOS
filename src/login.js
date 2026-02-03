@@ -15,6 +15,8 @@ export function startLogin() {
   state.loginStep = 0;
   state.loginUser = null;
 
+  updatePrompt();
+
   print("Insert username:");
   print("");
 }
@@ -30,7 +32,9 @@ export function handleLogin(value) {
 
     if (!user) {
       print("User not found.");
-      print("login: please enter your username.");
+      print("");
+      resetLogin();
+      updatePrompt();
       return;
     }
 
@@ -47,7 +51,9 @@ export function handleLogin(value) {
   if (state.loginStep === 1) {
     if (value !== state.loginUser.password) {
       print("Access Denied.");
+      print("");
       resetLogin();
+      updatePrompt();
       return;
     }
 
@@ -82,7 +88,7 @@ function resetLogin() {
    LOGOUT
 ========================= */
 
-export function cmdLogout() {
+export function cmdLogout(silently = false) {
   state.currentUser = {
     username: "guest",
     role: "guest",
@@ -92,8 +98,10 @@ export function cmdLogout() {
 
   clearTerminal();
 
-  print("Logged out. Welcome guest.");
-  print("");
+  if (!silently) {
+    print("Logged out. Welcome guest.");
+    print("");
+  }
 
   state.cwd = [];
   updatePrompt();

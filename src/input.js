@@ -18,6 +18,8 @@ import {
   cmdClear,
 } from "./system.js";
 
+import { cmdTheme } from "./theme.js";
+
 function printPrompt(command) {
   const line = document.createElement("div");
   line.className = "line";
@@ -52,16 +54,17 @@ function executeCommand() {
 
   if (!raw) return;
 
-  const [cmd, arg] = raw.split(/\s+/);
+  const parts = raw.split(/\s+/);
+  const cmd = parts[0];
+  const args = parts.slice(1);
 
   switch (cmd.toLowerCase()) {
     case "ls":
       cmdLs();
-      print("");
       break;
 
     case "cd":
-      cmdCd(arg);
+      cmdCd(args[0]);
       break;
 
     case "help":
@@ -88,12 +91,17 @@ function executeCommand() {
 
     case "version":
     case "ver":
-      print(" NEXTOS TERMINAL");
+      print("NEXTOS TERMINAL");
       print("");
       break;
 
     case "login":
       startLogin();
+      break;
+
+    case "theme":
+      const result = cmdTheme(args);
+
       break;
 
     default:

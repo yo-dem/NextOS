@@ -1,3 +1,18 @@
+/*
+  =========================================================
+  CSS
+  VARIABLES
+  =========================================================
+  */
+:root {
+  --bg-color: #0f0f0f;
+  --text-color: #00ff88be;
+  --prompt-color: #3cff01;
+  --caret-color: #00ff8894;
+  --header-color: #afc2bb;
+  --footer-color: #00aa66;
+}
+
 /* =========================================================
    RESET BASE + BODY
    ========================================================= */
@@ -10,8 +25,8 @@ body {
   width: 100%;
   height: 100%;
 
-  background: #0f0f0f;
-  color: #00ff88be;
+  background: var(--bg-color);
+  color: var(--text-color);
 
   font-family: "Courier New", Courier, monospace;
 
@@ -46,7 +61,7 @@ body {
   margin-bottom: 30px;
   white-space: pre;
 
-  color: #afc2bb;
+  color: var(--header-color);
   font-weight: bold;
 }
 
@@ -90,7 +105,7 @@ body {
    ========================================================= */
 
 .prompt-path {
-  color: #3cff01;
+  color: var(--prompt-color);
   font-weight: bold;
   white-space: pre;
 }
@@ -106,7 +121,7 @@ body {
   border: none;
   outline: none;
 
-  color: #00ff88be;
+  color: var(--text-color);
   font-family: inherit;
   font-size: 1em;
 
@@ -128,7 +143,7 @@ body {
   width: 0.5em;
   height: 1em;
 
-  background: #00ff8894;
+  background: var(--caret-color);
 
   animation: blink 1s steps(1) infinite;
   pointer-events: none;
@@ -141,7 +156,7 @@ body {
 .footer {
   margin-top: 20px;
   font-size: 0.85em;
-  color: #00aa66;
+  color: var(--footer-color);
 }
 
 /* =========================================================

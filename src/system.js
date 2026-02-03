@@ -4,6 +4,7 @@ import { state } from "./state.js";
 import { print, clearTerminal } from "./terminal.js";
 import { getNode } from "./fs.js";
 import { updatePrompt } from "./prompt.js";
+import { cmdLogout } from "./login.js";
 
 /* =========================
    HELP
@@ -17,9 +18,11 @@ export function cmdHelp() {
   print("   clock, time     show date and time");
   print("   login           switch user");
   print("   logout          logout current user");
-  print("   reboot          reboot system");
   print("   ls              list directory");
+  print("   reboot          reboot system");
+  print("   theme           list or set terminal theme");
   print("   version, ver    show system version");
+  print("");
   print("   help            show help");
   print("");
 }
@@ -50,46 +53,45 @@ export function tryRunApp(name) {
 export function cmdReboot() {
   cmdSoftReset();
 
-  clearTerminal();
-
-  print("Rebooting system...");
-  print("");
-
   const lines = [
-    "Booting NextOS kernel...",
-    " [OK]",
     "",
-    "Loading core modules:",
-    " [OK] MEMORY...",
-    " [OK] IO...",
+    "Shutting down modules...",
     " [OK] NETWORK...",
+    " [OK] IO...",
+    " [OK] MEMORY...",
     "",
-    "Checking devices...",
-    " [OK]",
+    " [INFO] All temporary files cleared.",
+    " [INFO] System state saved successfully.",
     "",
+    " Saving system state...",
     "",
-    " [INFO] Establishing secure link...",
-    " [INFO] Server authenticated.",
-    " [INFO] Virtual filesystem mounted",
-    "",
-    "Finalizing boot sequence...",
+    " [INFO] System state saved [OK] Preparing for reboot...",
     "",
   ];
 
-  let i = 0;
+  let index = 0;
 
-  function next() {
-    if (i < lines.length) {
-      print(lines[i++]);
-      setTimeout(next, 200);
+  const promptEl = terminal.querySelector(".prompt");
+  if (promptEl) promptEl.classList.add("hidden");
+
+  cmdLogout(true);
+
+  function nextLine() {
+    if (index < lines.length) {
+      print(lines[index++]);
+      setTimeout(nextLine, 150 + Math.random() * 300);
     } else {
-      setTimeout(finish, 500);
+      setTimeout(() => {
+        clearTerminal();
+
+        const promptEl = terminal.querySelector(".prompt");
+        if (promptEl) promptEl.classList.remove("hidden");
+        document.getElementById("cmd").focus();
+      }, 500);
     }
   }
 
-  setTimeout(() => {
-    location.reload();
-  }, 1500);
+  setTimeout(nextLine, 800);
 }
 
 /* =========================
@@ -118,6 +120,6 @@ export function cmdClear() {
 ========================= */
 
 export function cmdPrintDateTime() {
-  print(" " + new Date().toLocaleString());
+  print(new Date().toLocaleString());
   print("");
 }

@@ -19,8 +19,8 @@ export function cmdLs() {
   const W = 40;
 
   print("");
-  print(`   ${".".padEnd(W)}[*]`);
-  print(`   ${"..".padEnd(W)}[*]`);
+  print(`${".".padEnd(W)}[*]`);
+  print(`${"..".padEnd(W)}[*]`);
 
   for (const [n, i] of Object.entries(node.children)) {
     const icon = i.type === "dir" ? "[dir]" : "[prg]";
@@ -29,15 +29,16 @@ export function cmdLs() {
 
     if (i.type === "dir") {
       dirs++;
-      print(`   ${name}${icon}`);
+      print(`${name}${icon}`);
     } else {
       files++;
-      print(`   ${name}${icon} ${i.size ?? 0} KB`);
+      print(`${name}${icon} ${i.size ?? 0} KB`);
     }
   }
 
   print("");
-  print(`   ${dirs} dir, ${files} file`);
+  print(`${dirs} dir, ${files} file`);
+  print("");
 }
 
 export function cmdCd(arg) {

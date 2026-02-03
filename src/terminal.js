@@ -8,7 +8,7 @@ export function print(text = "") {
 
   if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
 
-  div.textContent = text.trim() || "\u00A0";
+  div.textContent = text || "\u00A0";
 
   dom.terminal.insertBefore(div, dom.terminal.querySelector(".prompt"));
 

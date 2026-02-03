@@ -6,6 +6,10 @@ import { dom } from "./dom.js";
 let blinkTimeout = null;
 
 export function getPrompt() {
+  if (state.isLoggingIn) {
+    return "> ";
+  }
+
   const base = `/${state.currentUser.username}`;
 
   if (!state.cwd.length) return base + "/>: ";
