@@ -17,7 +17,7 @@ export function cmdHelp() {
   print("Files:     ls, cd, mkdir, rm [-r]");
   print("System:    clear, reboot, time, version");
   print("User:      login, logout");
-  print("Other:     theme, help");
+  print("Other:     vi, vim, theme, help");
   print("");
   print("Use '<command> --help' for detailed info");
   print("Example: ls --help, cd --help, rm --help");

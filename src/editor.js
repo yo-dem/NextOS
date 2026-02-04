@@ -9,6 +9,7 @@ let editorActive = false;
 let editorFilename = "";
 let editorContent = [];
 let editorCursorLine = 0;
+let editorCursorCol = 0;
 let editorMode = "NORMAL"; // NORMAL, INSERT, COMMAND
 let editorOverlay = null;
 let editorDisplay = null;
@@ -16,6 +17,7 @@ let editorStatusBar = null;
 let commandBuffer = "";
 
 export function openEditor(filename) {
+  editorCursorCol = 0;
   if (!filename) {
     print("vi: missing filename");
     print("Usage: vi <filename>");
@@ -115,8 +117,28 @@ function updateEditorDisplay() {
 
   editorContent.forEach((line, index) => {
     const lineNumber = String(index + 1).padStart(4, " ");
-    const cursor = index === editorCursorLine ? ">" : " ";
-    display += `${cursor}${lineNumber} | ${line}\n`;
+    const isCursorLine = index === editorCursorLine;
+
+    let renderedLine = line;
+
+    if (isCursorLine) {
+      const col = Math.min(editorCursorCol, line.length);
+
+      const before = line.slice(0, col);
+      const char = line[col] || " ";
+      const after = line.slice(col + 1);
+
+      // caret visivo
+      renderedLine =
+        before +
+        "▌" + // cursore
+        char +
+        after;
+    }
+
+    const cursor = isCursorLine ? ">" : " ";
+
+    display += `${cursor}${lineNumber} | ${renderedLine}\n`;
   });
 
   editorDisplay.textContent = display;
@@ -146,6 +168,9 @@ function editorKeyHandler(e) {
 
   e.preventDefault();
 
+  // Frecce sempre attive
+  if (handleArrowKeys(e)) return;
+
   if (editorMode === "NORMAL") {
     handleNormalMode(e);
   } else if (editorMode === "INSERT") {
@@ -155,57 +180,9 @@ function editorKeyHandler(e) {
   }
 }
 
-function handleNormalMode(e) {
-  switch (e.key) {
-    case "i": // Insert mode
-      editorMode = "INSERT";
-      updateStatusBar();
-      break;
-
-    case "j": // Down
-      if (editorCursorLine < editorContent.length - 1) {
-        editorCursorLine++;
-        updateEditorDisplay();
-      }
-      break;
-
-    case "k": // Up
-      if (editorCursorLine > 0) {
-        editorCursorLine--;
-        updateEditorDisplay();
-      }
-      break;
-
-    case "o": // Open new line below
-      editorContent.splice(editorCursorLine + 1, 0, "");
-      editorCursorLine++;
-      editorMode = "INSERT";
-      updateEditorDisplay();
-      break;
-
-    case "O": // Open new line above
-      editorContent.splice(editorCursorLine, 0, "");
-      editorMode = "INSERT";
-      updateEditorDisplay();
-      break;
-
-    case "d": // Delete line (aspetta secondo 'd')
-      waitForSecondKey("d", () => {
-        editorContent.splice(editorCursorLine, 1);
-        if (editorContent.length === 0) editorContent = [""];
-        if (editorCursorLine >= editorContent.length) {
-          editorCursorLine = editorContent.length - 1;
-        }
-        updateEditorDisplay();
-      });
-      break;
-
-    case ":": // Command mode
-      editorMode = "COMMAND";
-      commandBuffer = "";
-      updateStatusBar();
-      break;
-  }
+function clampCursorCol() {
+  const line = editorContent[editorCursorLine];
+  editorCursorCol = Math.min(editorCursorCol, line.length);
 }
 
 let waitingForKey = null;
@@ -244,31 +221,96 @@ function handleInsertMode(e) {
   }
 
   if (e.key === "Enter") {
-    const currentLine = editorContent[editorCursorLine];
-    editorContent.splice(editorCursorLine + 1, 0, "");
+    const line = editorContent[editorCursorLine];
+
+    const before = line.slice(0, editorCursorCol);
+    const after = line.slice(editorCursorCol);
+
+    editorContent[editorCursorLine] = before;
+    editorContent.splice(editorCursorLine + 1, 0, after);
+
     editorCursorLine++;
+    editorCursorCol = 0;
+
     updateEditorDisplay();
     return;
   }
 
   if (e.key === "Backspace") {
-    if (editorContent[editorCursorLine].length > 0) {
-      editorContent[editorCursorLine] = editorContent[editorCursorLine].slice(
-        0,
-        -1,
-      );
-      updateEditorDisplay();
+    const line = editorContent[editorCursorLine];
+
+    if (editorCursorCol > 0) {
+      const before = line.slice(0, editorCursorCol - 1);
+      const after = line.slice(editorCursorCol);
+
+      editorContent[editorCursorLine] = before + after;
+      editorCursorCol--;
     } else if (editorCursorLine > 0) {
+      const prevLine = editorContent[editorCursorLine - 1];
+
+      editorCursorCol = prevLine.length;
+      editorContent[editorCursorLine - 1] += line;
       editorContent.splice(editorCursorLine, 1);
+
       editorCursorLine--;
-      updateEditorDisplay();
     }
+
+    updateEditorDisplay();
     return;
   }
 
   if (e.key.length === 1) {
-    editorContent[editorCursorLine] += e.key;
+    const line = editorContent[editorCursorLine];
+
+    const before = line.slice(0, editorCursorCol);
+    const after = line.slice(editorCursorCol);
+
+    editorContent[editorCursorLine] = before + e.key + after;
+    editorCursorCol++;
+
     updateEditorDisplay();
+  }
+}
+
+function handleNormalMode(e) {
+  switch (e.key) {
+    case "i":
+      editorMode = "INSERT";
+      updateStatusBar();
+      return;
+
+    case ":":
+      editorMode = "COMMAND";
+      commandBuffer = "";
+      updateStatusBar();
+      return;
+
+    case "h": // sinistra (stile vim)
+      if (editorCursorCol > 0) editorCursorCol--;
+      updateEditorDisplay();
+      return;
+
+    case "l": // destra
+      if (editorCursorCol < editorContent[editorCursorLine].length)
+        editorCursorCol++;
+      updateEditorDisplay();
+      return;
+
+    case "k": // su
+      if (editorCursorLine > 0) {
+        editorCursorLine--;
+        clampCursorCol();
+      }
+      updateEditorDisplay();
+      return;
+
+    case "j": // giù
+      if (editorCursorLine < editorContent.length - 1) {
+        editorCursorLine++;
+        clampCursorCol();
+      }
+      updateEditorDisplay();
+      return;
   }
 }
 
@@ -282,8 +324,11 @@ function handleCommandMode(e) {
 
   if (e.key === "Enter") {
     executeCommand(commandBuffer);
+
     commandBuffer = "";
     editorMode = "NORMAL";
+
+    updateEditorDisplay();
     updateStatusBar();
     return;
   }
@@ -305,11 +350,11 @@ function executeCommand(cmd) {
     saveFile();
   } else if (cmd === "wq") {
     saveFile();
-    closeEditor();
+    closeEditor(true);
   } else if (cmd === "q") {
-    closeEditor();
+    closeEditor(true);
   } else if (cmd === "q!") {
-    closeEditor();
+    closeEditor(false);
   } else {
     // Comando non riconosciuto, torna in normal mode
     editorMode = "NORMAL";
@@ -320,16 +365,24 @@ function saveFile() {
   const currentNode = getNode(state.cwd);
   const content = editorContent.join("\n");
 
+  const size = getFileSize(content);
+  let sizeFile = 0;
+  if (size.kb <= 1) {
+    sizeFile = size.bytes + " bytes";
+  } else {
+    sizeFile = size.kb + " KB";
+  }
+
   currentNode.children[editorFilename] = {
-    type: "file",
+    type: "txt",
     content: content,
-    size: Math.ceil(content.length / 1024),
+    size: sizeFile,
   };
 
   saveFS();
 }
 
-function closeEditor() {
+function closeEditor(saved = true) {
   editorActive = false;
   document.removeEventListener("keydown", editorKeyHandler);
 
@@ -342,7 +395,7 @@ function closeEditor() {
   dom.terminal.querySelector(".prompt").style.display = "flex";
   dom.input.focus();
 
-  print(`"${editorFilename}" saved`);
+  if (saved) print(`"${editorFilename}" saved`);
   print("");
 
   editorContent = [];
@@ -353,4 +406,58 @@ function closeEditor() {
 
 export function isEditorActive() {
   return editorActive;
+}
+
+function handleArrowKeys(e) {
+  switch (e.key) {
+    case "ArrowLeft":
+      if (editorCursorCol > 0) {
+        editorCursorCol--;
+      } else if (editorCursorLine > 0) {
+        editorCursorLine--;
+        editorCursorCol = editorContent[editorCursorLine].length;
+      }
+      updateEditorDisplay();
+      return true;
+
+    case "ArrowRight": {
+      const line = editorContent[editorCursorLine];
+
+      if (editorCursorCol < line.length) {
+        editorCursorCol++;
+      } else if (editorCursorLine < editorContent.length - 1) {
+        editorCursorLine++;
+        editorCursorCol = 0;
+      }
+      updateEditorDisplay();
+      return true;
+    }
+
+    case "ArrowUp":
+      if (editorCursorLine > 0) {
+        editorCursorLine--;
+        clampCursorCol();
+        updateEditorDisplay();
+      }
+      return true;
+
+    case "ArrowDown":
+      if (editorCursorLine < editorContent.length - 1) {
+        editorCursorLine++;
+        clampCursorCol();
+        updateEditorDisplay();
+      }
+      return true;
+  }
+
+  return false;
+}
+
+function getFileSize(content) {
+  const bytes = new TextEncoder().encode(content).length;
+
+  return {
+    bytes,
+    kb: Math.ceil(bytes / 1024),
+  };
 }
