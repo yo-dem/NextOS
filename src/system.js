@@ -107,11 +107,12 @@ function cmdSoftReset() {
    CLEAR SCREEN
 ========================= */
 
-export function cmdClear() {
+export function cmdClear(silently = false) {
   terminal.querySelectorAll(".line").forEach((l) => l.remove());
-
-  print(new Date().toLocaleString());
-  print("SYSTEM READY");
+  if (!silently) {
+    print(new Date().toLocaleString());
+    print("SYSTEM READY");
+  }
   print("");
 }
 

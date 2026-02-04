@@ -19,6 +19,7 @@ import {
 } from "./system.js";
 
 import { cmdTheme } from "./theme.js";
+import { showHelp, hasHelpFlag } from "./help-utils.js";
 
 function printPrompt(command) {
   const line = document.createElement("div");
@@ -57,6 +58,12 @@ function executeCommand() {
   const parts = raw.split(/\s+/);
   const cmd = parts[0];
   const args = parts.slice(1);
+
+  if (hasHelpFlag(args)) {
+    cmdClear(true);
+    showHelp(cmd.toLowerCase());
+    return;
+  }
 
   switch (cmd.toLowerCase()) {
     case "ls":
