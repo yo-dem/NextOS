@@ -11,7 +11,7 @@
   --caret-color: #00ff8894;
   --header-color: #afc2bb;
   --footer-color: #00aa66;
-  --selection-color: rgba(116, 116, 116, 0.3);
+  --selection-color: /*rgba(116, 116, 116, 0.623);*/;
 }
 
 /* =========================================================

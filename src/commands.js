@@ -50,6 +50,12 @@ export function cmdCd(arg) {
     return;
   }
 
+  if (arg == "/") {
+    state.cwd = [];
+    updatePrompt();
+    return;
+  }
+
   const target = getNode([...state.cwd, arg]);
 
   if (!target || target.type !== "dir") {

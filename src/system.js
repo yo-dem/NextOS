@@ -35,7 +35,7 @@ export function tryRunApp(name) {
   const node = getNode([...state.cwd, name]);
 
   if (!node || node.type !== "app") {
-    print(` Command not found: ${name}`);
+    print(`Command not found: ${name}`);
     print("");
     return;
   }
