@@ -100,8 +100,7 @@ function executeCommand() {
       break;
 
     case "theme":
-      const result = cmdTheme(args);
-
+      cmdTheme(args);
       break;
 
     default:

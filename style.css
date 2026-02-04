@@ -137,10 +137,10 @@ body {
 .fake-caret {
   position: absolute;
 
-  left: 2px;
-  top: 1px;
+  left: 0px;
+  top: 0px;
 
-  width: 0.5em;
+  width: 0.65em;
   height: 1em;
 
   background: var(--caret-color);
