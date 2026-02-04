@@ -11,19 +11,28 @@ import { cmdLogout } from "./login.js";
 ========================= */
 
 export function cmdHelp() {
-  print(" AVAILABLE COMMANDS:");
-  print("   <app>           launch app");
-  print("   cd <dir>        change directory");
-  print("   clear, cls      clear screen");
-  print("   clock, time     show date and time");
-  print("   login           switch user");
-  print("   logout          logout current user");
-  print("   ls              list directory");
-  print("   reboot          reboot system");
-  print("   theme           list or set terminal theme");
-  print("   version, ver    show system version");
+  clearTerminal(true);
+  print("HELP - AVAILABLE COMMANDS");
+  print("------------------------------------------------------");
   print("");
-  print("   help            show help");
+  print("  ls                      List directory contents");
+  print("  cd <dir>                Change current directory");
+  print("");
+  print("  clear, cls              Clear terminal screen");
+  print("  reboot                  Restart terminal session");
+  print("  time, clock             Show current date and time");
+  print("  version, ver            Show system version");
+  print("");
+  print("  login                   Authenticate as user");
+  print("  logout                  Return to guest account");
+  print("");
+  print("  theme [name]            View or change color theme");
+  print("");
+  print("  <app>                   Launch application by name");
+  print("");
+  print("  help                    Show this help");
+  print("");
+  print("Type '<command> --help' for detailed command information");
   print("");
 }
 

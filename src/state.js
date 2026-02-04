@@ -24,7 +24,7 @@ export function saveUser() {
 export function loadTheme() {
   try {
     const saved = localStorage.getItem("terminal_theme");
-    return saved || "classic";
+    return saved || "dracula";
   } catch (e) {
     return "classic";
   }
