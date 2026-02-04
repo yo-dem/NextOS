@@ -86,7 +86,7 @@ export const themes = {
       bg: "#282a36",
       text: "#f8f8f2",
       prompt: "#50fa7b",
-      caret: "#f8f8f2dd",
+      caret: "#f8f8f265",
       header: "#8be9fd",
       footer: "#6272a4",
     },

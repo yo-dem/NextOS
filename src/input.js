@@ -117,6 +117,7 @@ dom.input.addEventListener("keydown", (e) => {
 
     const value = dom.input.value.trim();
     dom.input.value = "";
+    updateCaret();
 
     handleLogin(value);
     return;
@@ -124,6 +125,8 @@ dom.input.addEventListener("keydown", (e) => {
 
   /* HISTORY UP */
   if (e.key === "ArrowUp") {
+    if (e.shiftKey) return;
+
     if (state.historyIndex > 0) {
       state.historyIndex--;
 
@@ -138,6 +141,8 @@ dom.input.addEventListener("keydown", (e) => {
 
   /* HISTORY DOWN */
   if (e.key === "ArrowDown") {
+    if (e.shiftKey) return;
+
     if (state.historyIndex < state.history.length - 1) {
       state.historyIndex++;
 
@@ -152,18 +157,59 @@ dom.input.addEventListener("keydown", (e) => {
     return;
   }
 
+  /* AGGIORNA CURSORE PER FRECCE LATERALI E SELEZIONI */
+  if (
+    e.key === "ArrowLeft" ||
+    e.key === "ArrowRight" ||
+    e.key === "Home" ||
+    e.key === "End"
+  ) {
+    requestAnimationFrame(updateCaret);
+    pauseBlink();
+    return;
+  }
+
   /* EXECUTE */
   if (e.key === "Enter") {
     executeCommand();
+    return;
   }
 
   requestAnimationFrame(updateCaret);
   pauseBlink();
 });
 
-dom.input.addEventListener("input", () => {
+dom.input.addEventListener("input", (e) => {
+  // Se siamo nel passo password, gestisci il buffer nascosto
+  if (state.isLoggingIn && state.loginStep === 1) {
+    const currentValue = dom.input.value;
+    const previousLength = state.passwordBuffer.length;
+
+    // Se l'utente ha aggiunto caratteri
+    if (currentValue.length > previousLength) {
+      const newChars = currentValue.substring(previousLength);
+      state.passwordBuffer += newChars;
+    }
+    // Se l'utente ha cancellato caratteri
+    else if (currentValue.length < previousLength) {
+      state.passwordBuffer = state.passwordBuffer.substring(
+        0,
+        currentValue.length,
+      );
+    }
+
+    // Mostra solo asterischi
+    dom.input.value = "*".repeat(state.passwordBuffer.length);
+  }
+
   updateCaret();
   pauseBlink();
+});
+
+document.addEventListener("selectionchange", () => {
+  if (document.activeElement === dom.input) {
+    updateCaret();
+  }
 });
 
 dom.input.addEventListener("click", () => {

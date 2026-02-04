@@ -3,6 +3,7 @@
 import { state, saveUser } from "./state.js";
 import { print, clearTerminal } from "./terminal.js";
 import { updatePrompt } from "./prompt.js";
+import { dom } from "./dom.js";
 
 /* =========================
    LOGIN START
@@ -14,6 +15,7 @@ export function startLogin() {
   state.isLoggingIn = true;
   state.loginStep = 0;
   state.loginUser = null;
+  state.passwordBuffer = "";
 
   updatePrompt();
 
@@ -49,7 +51,7 @@ export function handleLogin(value) {
 
   // PASSWORD
   if (state.loginStep === 1) {
-    if (value !== state.loginUser.password) {
+    if (state.passwordBuffer !== state.loginUser.password) {
       print("Access Denied.");
       print("");
       resetLogin();
@@ -82,6 +84,7 @@ function resetLogin() {
   state.isLoggingIn = false;
   state.loginStep = 0;
   state.loginUser = null;
+  dom.input.type = "text";
 }
 
 /* =========================

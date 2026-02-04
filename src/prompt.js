@@ -7,7 +7,7 @@ let blinkTimeout = null;
 
 export function getPrompt() {
   if (state.isLoggingIn) {
-    return "> ";
+    return ">: ";
   }
 
   const base = `/${state.currentUser.username}`;
@@ -23,8 +23,19 @@ export function updatePrompt() {
 }
 
 export function updateCaret() {
-  const pos = dom.input.selectionStart || 0;
+  const start = dom.input.selectionStart || 0;
+  const end = dom.input.selectionEnd || 0;
   const len = dom.promptPath.textContent.length;
+
+  let pos;
+
+  if (start !== end) {
+    const direction = dom.input.selectionDirection;
+
+    pos = direction === "backward" ? start : end;
+  } else {
+    pos = start;
+  }
 
   dom.caret.style.marginLeft = (len + pos) * 0.6 + "em";
 }

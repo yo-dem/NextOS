@@ -8,6 +8,7 @@ export const state = {
   isLoggingIn: false,
   loginStep: 0,
   loginUser: null,
+  passwordBuffer: "",
 
   history: [],
   historyIndex: -1,

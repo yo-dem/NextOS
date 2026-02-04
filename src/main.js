@@ -4,7 +4,6 @@ import { VERSION } from "./config.js";
 import { dom } from "./dom.js";
 import { loadFS } from "./fs.js";
 import { bootSequence } from "./boot.js";
-import { updateCaret } from "./prompt.js";
 import { loadTheme } from "./state.js";
 import { applyTheme } from "./theme.js";
 import "./input.js";
@@ -23,5 +22,3 @@ async function start() {
 }
 
 start();
-
-setInterval(updateCaret, 16);

@@ -139,10 +139,10 @@ body {
   position: absolute;
 
   left: 0px;
-  top: 0px;
+  top: 1px;
 
-  width: 0.65em;
-  height: 1em;
+  width: 0.6em;
+  height: 18px;
 
   background: var(--caret-color);
 
