@@ -20,6 +20,7 @@ import {
 
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help-utils.js";
+import { openEditor, isEditorActive } from "./editor.js";
 
 function printPrompt(command) {
   const line = document.createElement("div");
@@ -60,7 +61,6 @@ function executeCommand() {
   const args = parts.slice(1);
 
   if (hasHelpFlag(args)) {
-    cmdClear(true);
     showHelp(cmd.toLowerCase());
     return;
   }
@@ -122,12 +122,21 @@ function executeCommand() {
       cmdTheme(args);
       break;
 
+    case "vi":
+    case "vim":
+      openEditor(args[0]);
+      break;
+
     default:
       tryRunApp(cmd);
   }
 }
 
+// KEYDOWN - Un solo listener!
 dom.input.addEventListener("keydown", (e) => {
+  // Se l'editor è attivo, non processare input del terminal
+  if (isEditorActive()) return;
+
   /* LOGIN MODE */
   if (state.isLoggingIn) {
     if (e.key !== "Enter") return;
@@ -148,9 +157,7 @@ dom.input.addEventListener("keydown", (e) => {
 
     if (state.historyIndex > 0) {
       state.historyIndex--;
-
       dom.input.value = state.history[state.historyIndex];
-
       updateCaret();
     }
 
@@ -164,7 +171,6 @@ dom.input.addEventListener("keydown", (e) => {
 
     if (state.historyIndex < state.history.length - 1) {
       state.historyIndex++;
-
       dom.input.value = state.history[state.historyIndex];
     } else {
       state.historyIndex = state.history.length;
@@ -198,6 +204,7 @@ dom.input.addEventListener("keydown", (e) => {
   pauseBlink();
 });
 
+// INPUT
 dom.input.addEventListener("input", (e) => {
   // Se siamo nel passo password, gestisci il buffer nascosto
   if (state.isLoggingIn && state.loginStep === 1) {
@@ -225,12 +232,14 @@ dom.input.addEventListener("input", (e) => {
   pauseBlink();
 });
 
+// SELECTION CHANGE
 document.addEventListener("selectionchange", () => {
   if (document.activeElement === dom.input) {
     updateCaret();
   }
 });
 
+// CLICK
 dom.input.addEventListener("click", () => {
   updateCaret();
   pauseBlink();

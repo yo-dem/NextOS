@@ -13,6 +13,7 @@ export function showHelp(command) {
   }
 
   // Stampa ogni riga dell'array
+  print("");
   helpLines.forEach((line) => print(line));
   print("");
 }

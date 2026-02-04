@@ -11,31 +11,16 @@ import { cmdLogout } from "./login.js";
 ========================= */
 
 export function cmdHelp() {
-  clearTerminal(true);
-  print("HELP - AVAILABLE COMMANDS");
-  print("------------------------------------------------------");
   print("");
-  print("  ls                      List directory contents");
-  print("  cd <dir>                Change current directory");
-  print("  mkdir <dir>             Create new directory");
-  print("  rmdir <dir>             Remove empty directory");
-  print("  rm [-r] <target>        Remove file or directory");
+  print("NEXTOS TERMINAL - Quick Reference");
   print("");
-  print("  clear, cls              Clear terminal screen");
-  print("  reboot                  Restart terminal session");
-  print("  time, clock             Show current date and time");
-  print("  version, ver            Show system version");
+  print("Files:     ls, cd, mkdir, rm [-r]");
+  print("System:    clear, reboot, time, version");
+  print("User:      login, logout");
+  print("Other:     theme, help");
   print("");
-  print("  login                   Authenticate as user");
-  print("  logout                  Return to guest account");
-  print("");
-  print("  theme [name]            View or change color theme");
-  print("");
-  print("  <app>                   Launch application by name");
-  print("");
-  print("  help                    Show this help");
-  print("");
-  print("Type '<command> --help' for detailed command information");
+  print("Use '<command> --help' for detailed info");
+  print("Example: ls --help, cd --help, rm --help");
   print("");
 }
 

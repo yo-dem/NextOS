@@ -185,6 +185,28 @@ export const helpTexts = {
     "  ver --help   Show this help",
   ],
 
+  vi: [
+    "Usage: vi <filename>",
+    "",
+    "Vi-style text editor.",
+    "",
+    "Normal mode commands:",
+    "  i       Enter insert mode",
+    "  j/k     Move down/up",
+    "  o/O     New line below/above",
+    "  dd      Delete line",
+    "  :w      Save file",
+    "  :q      Quit",
+    "  :wq     Save and quit",
+    "  :q!     Quit without saving",
+    "",
+    "Insert mode:",
+    "  ESC     Return to normal mode",
+    "  Type to insert text",
+    "",
+    "Aliases: vim",
+  ],
+
   login: [
     "Usage: login",
     "",
