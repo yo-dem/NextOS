@@ -17,6 +17,9 @@ export function cmdHelp() {
   print("");
   print("  ls                      List directory contents");
   print("  cd <dir>                Change current directory");
+  print("  mkdir <dir>             Create new directory");
+  print("  rmdir <dir>             Remove empty directory");
+  print("  rm [-r] <target>        Remove file or directory");
   print("");
   print("  clear, cls              Clear terminal screen");
   print("  reboot                  Restart terminal session");

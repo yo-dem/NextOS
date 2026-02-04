@@ -78,6 +78,44 @@ export const helpTexts = {
     "  logout --help Show this help",
   ],
 
+  mkdir: [
+    "Usage: mkdir <directory>",
+    "",
+    "Create new directory.",
+    "",
+    "Examples:",
+    "  mkdir projects",
+    "  mkdir --help",
+  ],
+
+  rmdir: [
+    "Usage: rmdir <directory>",
+    "",
+    "Remove an empty directory.",
+    "",
+    "Examples:",
+    "  rmdir test",
+    "  rmdir --help",
+    "",
+    "Note: Directory must be empty",
+  ],
+
+  rm: [
+    "Usage: rm [-r] <file|directory>",
+    "",
+    "Remove files or directories.",
+    "",
+    "Options:",
+    "  -r, -R      Remove directories recursively",
+    "",
+    "Examples:",
+    "  rm file.txt       Remove a file",
+    "  rm -r folder      Remove folder (even if not empty)",
+    "  rm --help         Show this help",
+    "",
+    "Warning: Recursive removal is permanent!",
+  ],
+
   reboot: [
     "Usage: reboot",
     "",

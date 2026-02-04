@@ -6,7 +6,7 @@ import { state } from "./state.js";
 import { updateCaret, pauseBlink } from "./prompt.js";
 import { print } from "./terminal.js";
 
-import { cmdLs, cmdCd } from "./commands.js";
+import { cmdLs, cmdCd, cmdMkdir, cmdRmdir, cmdRm } from "./commands.js";
 
 import { startLogin, handleLogin, cmdLogout } from "./login.js";
 
@@ -85,6 +85,18 @@ function executeCommand() {
 
     case "logout":
       cmdLogout();
+      break;
+
+    case "mkdir":
+      cmdMkdir(args[0]);
+      break;
+
+    case "rmdir":
+      cmdRmdir(args[0]);
+      break;
+
+    case "rm":
+      cmdRm(args);
       break;
 
     case "reboot":
