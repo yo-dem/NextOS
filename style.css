@@ -11,6 +11,7 @@
   --caret-color: #00ff8894;
   --header-color: #afc2bb;
   --footer-color: #00aa66;
+  --selection-color: rgba(116, 116, 116, 0.3);
 }
 
 /* =========================================================
@@ -147,6 +148,20 @@ body {
 
   animation: blink 1s steps(1) infinite;
   pointer-events: none;
+}
+
+/* =========================================================
+   SELEZIONE TESTO
+   ========================================================= */
+
+::selection {
+  background-color: var(--selection-color);
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: var(--selection-color);
+  color: inherit;
 }
 
 /* =========================================================
