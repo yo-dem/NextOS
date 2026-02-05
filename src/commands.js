@@ -2,7 +2,7 @@
 
 import { state } from "./state.js";
 import { print } from "./terminal.js";
-import { getNode, saveFS } from "./fs.js"; // ← Importa saveFS
+import { getNode, saveFS, normalizePath } from "./fs.js"; // ← Importa saveFS
 import { updatePrompt } from "./prompt.js";
 
 export function cmdLs() {
@@ -50,29 +50,19 @@ export function cmdLs() {
   print("");
 }
 
-export function cmdCd(arg) {
-  if (!arg) return;
+export function cmdCd(path) {
+  if (!path) return;
 
-  if (arg === "..") {
-    state.cwd.pop();
-    updatePrompt();
+  const newPath = normalizePath(state.cwd, path);
+
+  const node = getNode(newPath);
+
+  if (!node || node.type !== "dir") {
+    print(`cd: ${path}: No such directory`);
     return;
   }
 
-  if (arg == "/") {
-    state.cwd = [];
-    updatePrompt();
-    return;
-  }
-
-  const target = getNode([...state.cwd, arg]);
-
-  if (!target || target.type !== "dir") {
-    print("cd: no such directory");
-    return;
-  }
-
-  state.cwd.push(arg);
+  state.cwd = newPath;
   updatePrompt();
 }
 

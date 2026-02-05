@@ -33,12 +33,12 @@ export function getNode(path) {
   return node;
 }
 
-function findMatches(prefix, cwd) {
-  const node = getNode(cwd);
-  if (!node || !node.children) return [];
+// function findMatches(prefix, cwd) {
+//   const node = getNode(cwd);
+//   if (!node || !node.children) return [];
 
-  return Object.keys(node.children).filter((name) => name.startsWith(prefix));
-}
+//   return Object.keys(node.children).filter((name) => name.startsWith(prefix));
+// }
 
 export function resolvePath(cwd, rel) {
   if (!rel) return cwd;
@@ -68,9 +68,22 @@ export function autocomplete(input, cwd) {
     prefix = last.slice(lastSlash + 1);
   }
 
-  const searchPath = resolvePath(cwd, basePath);
+  const searchPath = normalizePath(state.cwd, basePath);
 
-  const matches = findMatches(prefix, searchPath);
+  const node = getNode(searchPath);
+
+  let matches = [];
+
+  if (node && node.children) {
+    matches = Object.keys(node.children)
+      .filter((name) => name.startsWith(prefix))
+      .map((name) => {
+        const child = node.children[name];
+
+        // Se è directory → aggiungi /
+        return child.type === "dir" ? name + "/" : name;
+      });
+  }
 
   return {
     parts,
@@ -78,4 +91,31 @@ export function autocomplete(input, cwd) {
     prefix,
     matches,
   };
+}
+
+export function normalizePath(cwd, path) {
+  let parts = [];
+
+  // Path assoluto
+  if (path.startsWith("/")) {
+    parts = path.split("/");
+  }
+  // Path relativo
+  else {
+    parts = [...cwd, ...path.split("/")];
+  }
+
+  const stack = [];
+
+  for (const part of parts) {
+    if (!part || part === ".") continue;
+
+    if (part === "..") {
+      stack.pop();
+    } else {
+      stack.push(part);
+    }
+  }
+
+  return stack;
 }
