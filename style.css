@@ -37,8 +37,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-
-  cursor: none;
 }
 
 /* =========================================================
@@ -89,7 +87,6 @@ body {
   display: flex;
   align-items: center;
   min-height: 1.5em;
-  cursor: none;
 }
 
 .hidden {
