@@ -15,6 +15,7 @@ import {
   cmdReboot,
   cmdHelp,
   cmdPrintDateTime,
+  cmdPrintVersion,
   cmdClear,
 } from "./system.js";
 
@@ -111,8 +112,7 @@ function executeCommand() {
 
     case "version":
     case "ver":
-      print("NEXTOS TERMINAL");
-      print("");
+      cmdPrintVersion();
       break;
 
     case "login":

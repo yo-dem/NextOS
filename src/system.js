@@ -5,6 +5,7 @@ import { print, clearTerminal } from "./terminal.js";
 import { getNode } from "./fs.js";
 import { updatePrompt } from "./prompt.js";
 import { cmdLogout } from "./login.js";
+import { VERSION } from "./config.js";
 
 /* =========================
    HELP
@@ -14,10 +15,10 @@ export function cmdHelp() {
   print("");
   print("NEXTOS TERMINAL - Quick Reference");
   print("");
-  print("Files:     ls, cd, mkdir, rm [-r]");
+  print("Files:     ls, cd, mkdir, rmdir, rm [-r]");
   print("System:    clear, reboot, time, version");
   print("User:      login, logout");
-  print("Other:     vi, vim, theme, help");
+  print("Other:     vi, theme, help");
   print("");
   print("Use '<command> --help' for detailed info");
   print("Example: ls --help, cd --help, rm --help");
@@ -119,5 +120,14 @@ export function cmdClear(silently = false) {
 
 export function cmdPrintDateTime() {
   print(new Date().toLocaleString());
+  print("");
+}
+
+/* =========================
+   PRINT VERSION
+========================= */
+
+export function cmdPrintVersion() {
+  print("" + VERSION);
   print("");
 }

@@ -26,58 +26,6 @@ export const helpTexts = {
     "  cd --help    Show this help",
   ],
 
-  help: [
-    "Usage: help [command]",
-    "",
-    "Show available commands or help for specific command.",
-    "",
-    "Arguments:",
-    "  command      Optional command name",
-    "",
-    "Examples:",
-    "  help         Show all commands",
-    "  help ls      Show help for ls",
-    "  help --help  Show this help",
-  ],
-
-  clear: [
-    "Usage: clear",
-    "",
-    "Clear the terminal screen.",
-    "",
-    "Aliases:",
-    "  cls          Same as clear",
-    "",
-    "Examples:",
-    "  clear        Clear screen",
-    "  cls          Clear screen",
-    "  clear --help Show this help",
-  ],
-
-  cls: [
-    "Usage: cls",
-    "",
-    "Clear the terminal screen.",
-    "",
-    "Aliases:",
-    "  clear        Same as cls",
-    "",
-    "Examples:",
-    "  cls          Clear screen",
-    "  clear        Clear screen",
-    "  cls --help   Show this help",
-  ],
-
-  logout: [
-    "Usage: logout",
-    "",
-    "Log out from current user and return to guest.",
-    "",
-    "Examples:",
-    "  logout       Log out to guest account",
-    "  logout --help Show this help",
-  ],
-
   mkdir: [
     "Usage: mkdir <directory>",
     "",
@@ -114,6 +62,34 @@ export const helpTexts = {
     "  rm --help         Show this help",
     "",
     "Warning: Recursive removal is permanent!",
+  ],
+
+  clear: [
+    "Usage: clear",
+    "",
+    "Clear the terminal screen.",
+    "",
+    "Aliases:",
+    "  cls          Same as clear",
+    "",
+    "Examples:",
+    "  clear        Clear screen",
+    "  cls          Clear screen",
+    "  clear --help Show this help",
+  ],
+
+  cls: [
+    "Usage: cls",
+    "",
+    "Clear the terminal screen.",
+    "",
+    "Aliases:",
+    "  clear        Same as cls",
+    "",
+    "Examples:",
+    "  cls          Clear screen",
+    "  clear        Clear screen",
+    "  cls --help   Show this help",
   ],
 
   reboot: [
@@ -185,6 +161,31 @@ export const helpTexts = {
     "  ver --help   Show this help",
   ],
 
+  login: [
+    "Usage: login",
+    "",
+    "Start login process to authenticate as user.",
+    "",
+    "Process:",
+    "  1. Enter username",
+    "  2. Enter password (hidden)",
+    "  3. Access granted if correct",
+    "",
+    "Examples:",
+    "  login        Start login",
+    "  login --help Show this help",
+  ],
+
+  logout: [
+    "Usage: logout",
+    "",
+    "Log out from current user and return to guest.",
+    "",
+    "Examples:",
+    "  logout       Log out to guest account",
+    "  logout --help Show this help",
+  ],
+
   vi: [
     "Usage: vi <filename>",
     "",
@@ -207,21 +208,6 @@ export const helpTexts = {
     "Aliases: vim",
   ],
 
-  login: [
-    "Usage: login",
-    "",
-    "Start login process to authenticate as user.",
-    "",
-    "Process:",
-    "  1. Enter username",
-    "  2. Enter password (hidden)",
-    "  3. Access granted if correct",
-    "",
-    "Examples:",
-    "  login        Start login",
-    "  login --help Show this help",
-  ],
-
   theme: [
     "Usage: theme [name]",
     "",
@@ -237,5 +223,19 @@ export const helpTexts = {
     "  theme        Show current theme",
     "  theme matrix Switch to matrix",
     "  theme --help Show this help",
+  ],
+
+  help: [
+    "Usage: help [command]",
+    "",
+    "Show available commands or help for specific command.",
+    "",
+    "Arguments:",
+    "  command      Optional command name",
+    "",
+    "Examples:",
+    "  help         Show all commands",
+    "  help ls      Show help for ls",
+    "  help --help  Show this help",
   ],
 };
