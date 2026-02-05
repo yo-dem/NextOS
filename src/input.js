@@ -3,10 +3,18 @@
 import { dom } from "./dom.js";
 import { state } from "./state.js";
 
-import { updateCaret, pauseBlink } from "./prompt.js";
+import { updateCaret, pauseBlink, updatePrompt } from "./prompt.js";
 import { print } from "./terminal.js";
 
-import { cmdLs, cmdCd, cmdMkdir, cmdRmdir, cmdRm, CmdMv } from "./commands.js";
+import {
+  cmdLs,
+  cmdCd,
+  cmdMkdir,
+  cmdRmdir,
+  cmdRm,
+  CmdMv,
+  handleConfirm,
+} from "./commands.js";
 
 import { startLogin, handleLogin, cmdLogout } from "./login.js";
 
@@ -62,6 +70,11 @@ function executeCommand() {
   const cmd = parts[0];
   const args = parts.slice(1);
 
+  if (state.waitingConfirm) {
+    handleConfirm(cmd);
+    return;
+  }
+
   if (hasHelpFlag(args)) {
     showHelp(cmd.toLowerCase());
     return;
@@ -94,10 +107,14 @@ function executeCommand() {
       break;
 
     case "rmdir":
+      dom.promptPath.textContent = ">:";
+      updateCaret();
       cmdRmdir(args[0]);
       break;
 
     case "rm":
+      dom.promptPath.textContent = ">:";
+      updateCaret();
       cmdRm(args);
       break;
 

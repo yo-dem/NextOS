@@ -184,11 +184,16 @@ export function cmdRmdir(path) {
     return;
   }
 
-  delete parentNode.children[name];
-  saveFS();
+  print(`Remove directory '${path}'? (y/N):`);
 
-  print(`Removed: ${path}/`);
-  print("");
+  state.waitingConfirm = {
+    type: "rmdir",
+    parentNode,
+    name,
+    path,
+  };
+
+  return;
 }
 
 export function cmdRm(args) {
@@ -252,30 +257,37 @@ export function cmdRm(args) {
     return;
   }
 
-  // Se directory
+  // Messaggio
+  let msg = "";
+
   if (target.type === "dir") {
-    if (!recursive) {
-      print(`rm: '${targetPath}': is a directory`);
-      print("Use rm -r to remove directories");
-      print("");
-      return;
-    }
+    msg = recursive
+      ? `Remove recursively '${targetPath}'? (y/N):`
+      : `rm: '${targetPath}': is a directory`;
+  } else {
+    msg = `Remove '${targetPath}'? (y/N):`;
+  }
 
-    // Ricorsione: elimina tutto
-    delete parentNode.children[name];
-    saveFS();
-
-    print(`Removed recursively: ${targetPath}/`);
+  if (target.type === "dir" && !recursive) {
+    print(msg);
+    print("Use rm -r to remove directories");
     print("");
     return;
   }
 
-  // Se file
-  delete parentNode.children[name];
-  saveFS();
+  // Chiedi conferma
+  print(msg);
 
-  print(`Removed: ${targetPath}`);
-  print("");
+  state.waitingConfirm = {
+    type: "rm",
+    parentNode,
+    name,
+    path: targetPath,
+    isDir: target.type === "dir",
+    recursive,
+  };
+
+  return;
 }
 
 export function CmdMv(args) {
@@ -389,4 +401,43 @@ export function CmdMv(args) {
   saveFS();
 
   print("");
+}
+
+export function handleConfirm(value) {
+  const confirm = state.waitingConfirm;
+  state.waitingConfirm = null;
+
+  if (value.toLowerCase() !== "y") {
+    print("Aborted.");
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  // RMDIR
+  if (confirm.type === "rmdir") {
+    delete confirm.parentNode.children[confirm.name];
+    saveFS();
+
+    print(`Removed: ${confirm.path}/`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  // RM
+  if (confirm.type === "rm") {
+    delete confirm.parentNode.children[confirm.name];
+    saveFS();
+
+    if (confirm.isDir) {
+      print(`Removed recursively: ${confirm.path}/`);
+    } else {
+      print(`Removed: ${confirm.path}`);
+    }
+
+    print("");
+    updatePrompt();
+    return;
+  }
 }
