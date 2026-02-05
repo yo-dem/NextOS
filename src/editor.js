@@ -5,7 +5,6 @@ import { print } from "./terminal.js";
 import { getNode, saveFS } from "./fs.js";
 import { dom } from "./dom.js";
 
-let editorActive = false;
 let editorFilename = "";
 let editorContent = [];
 let editorCursorLine = 0;
@@ -40,7 +39,7 @@ export function openEditor(filename) {
   }
 
   editorFilename = filename;
-  editorActive = true;
+  state.editorActive = true;
   editorMode = "NORMAL";
   editorCursorLine = 0;
   commandBuffer = "";
@@ -164,7 +163,7 @@ function attachEditorKeyHandlers() {
 }
 
 function editorKeyHandler(e) {
-  if (!editorActive) return;
+  if (!state.editorActive) return;
 
   e.preventDefault();
 
@@ -383,7 +382,7 @@ function saveFile() {
 }
 
 function closeEditor(saved = true) {
-  editorActive = false;
+  state.editorActive = false;
   document.removeEventListener("keydown", editorKeyHandler);
 
   if (editorOverlay) {
@@ -402,10 +401,6 @@ function closeEditor(saved = true) {
   editorCursorLine = 0;
   editorFilename = "";
   commandBuffer = "";
-}
-
-export function isEditorActive() {
-  return editorActive;
 }
 
 function handleArrowKeys(e) {

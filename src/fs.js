@@ -32,3 +32,50 @@ export function getNode(path) {
 
   return node;
 }
+
+function findMatches(prefix, cwd) {
+  const node = getNode(cwd);
+  if (!node || !node.children) return [];
+
+  return Object.keys(node.children).filter((name) => name.startsWith(prefix));
+}
+
+export function resolvePath(cwd, rel) {
+  if (!rel) return cwd;
+
+  if (rel.startsWith("/")) return rel;
+
+  const full = (cwd + "/" + rel).replace(/\/+/g, "/");
+
+  return full.endsWith("/") ? full.slice(0, -1) : full;
+}
+
+export function autocomplete(input, cwd) {
+  const cursor = input.length;
+
+  const before = input.slice(0, cursor);
+  const parts = before.split(/\s+/);
+
+  const last = parts.pop() || "";
+
+  const lastSlash = last.lastIndexOf("/");
+
+  let basePath = "";
+  let prefix = last;
+
+  if (lastSlash !== -1) {
+    basePath = last.slice(0, lastSlash + 1);
+    prefix = last.slice(lastSlash + 1);
+  }
+
+  const searchPath = resolvePath(cwd, basePath);
+
+  const matches = findMatches(prefix, searchPath);
+
+  return {
+    parts,
+    basePath,
+    prefix,
+    matches,
+  };
+}

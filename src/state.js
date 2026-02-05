@@ -9,6 +9,7 @@ export const state = {
   loginStep: 0,
   loginUser: null,
   passwordBuffer: "",
+  editorActive: false,
 
   history: [],
   historyIndex: -1,

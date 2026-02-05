@@ -20,7 +20,8 @@ import {
 
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help-utils.js";
-import { openEditor, isEditorActive } from "./editor.js";
+import { openEditor } from "./editor.js";
+import { autocomplete } from "./fs.js";
 
 function printPrompt(command) {
   const line = document.createElement("div");
@@ -132,10 +133,31 @@ function executeCommand() {
   }
 }
 
-// KEYDOWN - Un solo listener!
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const input = dom.input.value;
+
+    const result = autocomplete(input, state.cwd);
+
+    if (result.matches.length === 0) return;
+
+    const base = result.parts.join(" ");
+    const spacer = base ? " " : "";
+
+    if (result.matches.length === 1) {
+      dom.input.value = base + spacer + result.basePath + result.matches[0];
+    } else {
+      print(result.matches.join("  "));
+    }
+
+    updateCaret();
+  }
+});
+
 dom.input.addEventListener("keydown", (e) => {
   // Se l'editor è attivo, non processare input del terminal
-  if (isEditorActive()) return;
+  if (state.editorActive) return;
 
   /* LOGIN MODE */
   if (state.isLoggingIn) {
