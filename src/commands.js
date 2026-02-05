@@ -73,11 +73,11 @@ export function cmdMkdir(dirName) {
     return;
   }
 
-  if (state.currentUser.role === "guest") {
-    print("mkdir: permission denied");
-    print("");
-    return;
-  }
+  // if (state.currentUser.role === "guest") {
+  //   print("mkdir: permission denied");
+  //   print("");
+  //   return;
+  // }
 
   const currentNode = getNode(state.cwd);
 
@@ -105,52 +105,67 @@ export function cmdMkdir(dirName) {
   print("");
 }
 
-export function cmdRmdir(dirName) {
-  if (!dirName) {
+export function cmdRmdir(path) {
+  if (!path) {
     print("rmdir: missing directory name");
     print("");
     return;
   }
 
-  if (state.currentUser.role === "guest") {
-    print("rmdir: permission denied");
+  // if (state.currentUser.role === "guest") {
+  //   print("rmdir: permission denied");
+  //   print("");
+  //   return;
+  // }
+
+  // Rimuove eventuale /
+  path = path.replace(/\/+$/, "");
+
+  // Risolve path completo
+  const fullPath = normalizePath(state.cwd, path);
+
+  if (fullPath.length === 0) {
+    print("rmdir: cannot remove root");
     print("");
     return;
   }
 
-  const currentNode = getNode(state.cwd);
+  // Separiamo parent / nome
+  const name = fullPath.pop();
+  const parentPath = fullPath;
 
-  if (!currentNode || !currentNode.children) {
-    print("rmdir: current directory error");
+  const parentNode = getNode(parentPath);
+
+  if (!parentNode || !parentNode.children) {
+    print(`rmdir: '${path}': No such directory`);
     print("");
     return;
   }
 
-  if (!currentNode.children[dirName]) {
-    print(`rmdir: '${dirName}': No such directory`);
+  const target = parentNode.children[name];
+
+  if (!target) {
+    print(`rmdir: '${path}': No such directory`);
     print("");
     return;
   }
-
-  const target = currentNode.children[dirName];
 
   if (target.type !== "dir") {
-    print(`rmdir: '${dirName}': Not a directory`);
+    print(`rmdir: '${path}': Not a directory`);
     print("");
     return;
   }
 
-  // Controlla se la directory è vuota
   if (Object.keys(target.children).length > 0) {
-    print(`rmdir: '${dirName}': Directory not empty`);
+    print(`rmdir: '${path}': Directory not empty`);
     print("");
     return;
   }
 
-  delete currentNode.children[dirName];
+  delete parentNode.children[name];
   saveFS();
 
-  print(`Removed: ${dirName}/`);
+  print(`Removed: ${path}/`);
   print("");
 }
 
@@ -162,58 +177,81 @@ export function cmdRm(args) {
     return;
   }
 
-  if (state.currentUser.role === "guest") {
-    print("rm: permission denied");
-    print("");
-    return;
-  }
+  // if (state.currentUser.role === "guest") {
+  //   print("rm: permission denied");
+  //   print("");
+  //   return;
+  // }
 
   let recursive = false;
-  let targetName = args[0];
+  let targetPath = args[0];
 
-  // Controlla se c'è il flag -r
+  // Flag -r
   if (args[0] === "-r" || args[0] === "-R") {
     recursive = true;
-    targetName = args[1];
+    targetPath = args[1];
 
-    if (!targetName) {
+    if (!targetPath) {
       print("rm: missing operand after '-r'");
       print("");
       return;
     }
   }
 
-  const currentNode = getNode(state.cwd);
+  // Rimuove / finale
+  targetPath = targetPath.replace(/\/+$/, "");
 
-  if (!currentNode || !currentNode.children) {
-    print("rm: current directory error");
+  // Normalizza path
+  const fullPath = normalizePath(state.cwd, targetPath);
+
+  if (fullPath.length === 0) {
+    print("rm: cannot remove root");
     print("");
     return;
   }
 
-  if (!currentNode.children[targetName]) {
-    print(`rm: cannot remove '${targetName}': No such file or directory`);
+  // Parent + nome
+  const name = fullPath.pop();
+  const parentPath = fullPath;
+
+  const parentNode = getNode(parentPath);
+
+  if (!parentNode || !parentNode.children) {
+    print(`rm: '${targetPath}': No such file or directory`);
     print("");
     return;
   }
 
-  const target = currentNode.children[targetName];
+  const target = parentNode.children[name];
 
-  // Se è una directory
+  if (!target) {
+    print(`rm: '${targetPath}': No such file or directory`);
+    print("");
+    return;
+  }
+
+  // Se directory
   if (target.type === "dir") {
     if (!recursive) {
-      print(`rm: cannot remove '${targetName}': Is a directory`);
-      print("Use 'rm -r' to remove directories");
+      print(`rm: '${targetPath}': is a directory`);
+      print("Use rm -r to remove directories");
       print("");
       return;
     }
-    // Con -r può rimuovere anche directory piene
+
+    // Ricorsione: elimina tutto
+    delete parentNode.children[name];
+    saveFS();
+
+    print(`Removed recursively: ${targetPath}/`);
+    print("");
+    return;
   }
 
-  // Rimuovi
-  delete currentNode.children[targetName];
+  // Se file
+  delete parentNode.children[name];
   saveFS();
 
-  print(`Removed: ${targetName}`);
+  print(`Removed: ${targetPath}`);
   print("");
 }

@@ -33,13 +33,6 @@ export function getNode(path) {
   return node;
 }
 
-// function findMatches(prefix, cwd) {
-//   const node = getNode(cwd);
-//   if (!node || !node.children) return [];
-
-//   return Object.keys(node.children).filter((name) => name.startsWith(prefix));
-// }
-
 export function resolvePath(cwd, rel) {
   if (!rel) return cwd;
 

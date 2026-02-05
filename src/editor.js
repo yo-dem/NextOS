@@ -24,11 +24,11 @@ export function openEditor(filename) {
     return;
   }
 
-  if (state.currentUser.role === "guest") {
-    print("vi: permission denied");
-    print("");
-    return;
-  }
+  // if (state.currentUser.role === "guest") {
+  //   print("vi: permission denied");
+  //   print("");
+  //   return;
+  // }
 
   const currentNode = getNode(state.cwd);
 
