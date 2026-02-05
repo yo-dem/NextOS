@@ -2,7 +2,7 @@
 
 import { state } from "./state.js";
 import { print } from "./terminal.js";
-import { getNode, saveFS, isValidName } from "./fs.js";
+import { getNode, saveFS, isValidName, normalizePath } from "./fs.js";
 import { dom } from "./dom.js";
 
 let editorFilename = "";
@@ -14,49 +14,57 @@ let editorOverlay = null;
 let editorDisplay = null;
 let editorStatusBar = null;
 let commandBuffer = "";
+let editorDir = null;
 
-export function openEditor(filename) {
+export function openEditor(path) {
   editorCursorCol = 0;
-  if (!filename) {
+  if (!path) {
     print("vi: missing filename");
-    print("Usage: vi <filename>");
+    print("Usage: vi <file|path>");
     print("");
     return;
   }
 
-  // if (state.currentUser.role === "guest") {
-  //   print("vi: permission denied");
-  //   print("");
-  //   return;
-  // }
+  // Risolvi path completo
+  const fullPath = normalizePath(state.cwd, path);
 
-  const currentNode = getNode(state.cwd);
+  // Separiamo directory e file
+  const dirPath = fullPath.slice(0, -1);
+  const fileName = fullPath[fullPath.length - 1];
+  const dirNode = getNode(dirPath);
 
-  if (!currentNode || !currentNode.children) {
+  // Controlla nome file
+  if (!isValidName(fileName)) {
+    print(`vi: invalid file name: '${fileName}'`);
+    print("");
+    return;
+  }
+
+  if (!dirNode || dirNode.type !== "dir") {
+    print(`vi: cannot access '${path}'`);
+    print("");
+    return;
+  }
+
+  if (!dirNode || !dirNode.children) {
     print("vi: current directory error");
     print("");
     return;
   }
 
-  editorFilename = filename;
+  editorDir = dirNode;
+  editorFilename = fileName;
   state.editorActive = true;
   editorMode = "NORMAL";
   editorCursorLine = 0;
   commandBuffer = "";
 
-  if (!isValidName(editorFilename)) {
-    print(`mkdir: invalid file name: '${editorFilename}'`);
-    print("");
-    state.editorActive = false;
-    return;
-  }
-
   // Carica contenuto se il file esiste
-  if (currentNode.children[filename]) {
-    const fileNode = currentNode.children[filename];
+  if (dirNode.children[fileName]) {
+    const fileNode = dirNode.children[fileName];
 
     if (fileNode.type === "dir") {
-      print(`vi: '${filename}' is a directory`);
+      print(`vi: '${fileName}' is a directory`);
       print("");
       return;
     }
@@ -189,34 +197,6 @@ function editorKeyHandler(e) {
 function clampCursorCol() {
   const line = editorContent[editorCursorLine];
   editorCursorCol = Math.min(editorCursorCol, line.length);
-}
-
-let waitingForKey = null;
-let waitingCallback = null;
-
-function waitForSecondKey(key, callback) {
-  waitingForKey = key;
-  waitingCallback = callback;
-
-  const timeout = setTimeout(() => {
-    waitingForKey = null;
-    waitingCallback = null;
-  }, 1000);
-
-  const handler = (e) => {
-    clearTimeout(timeout);
-    document.removeEventListener("keydown", handler);
-
-    if (e.key === key && waitingCallback) {
-      e.preventDefault();
-      waitingCallback();
-    }
-
-    waitingForKey = null;
-    waitingCallback = null;
-  };
-
-  document.addEventListener("keydown", handler);
 }
 
 function handleInsertMode(e) {
@@ -358,7 +338,7 @@ function executeCommand(cmd) {
     saveFile();
     closeEditor(true);
   } else if (cmd === "q") {
-    closeEditor(true);
+    closeEditor(false);
   } else if (cmd === "q!") {
     closeEditor(false);
   } else {
@@ -368,7 +348,7 @@ function executeCommand(cmd) {
 }
 
 function saveFile() {
-  const currentNode = getNode(state.cwd);
+  const currentNode = editorDir;
   const content = editorContent.join("\n");
 
   const size = getFileSize(content);
