@@ -10,7 +10,7 @@ export function getPrompt() {
     return ">: ";
   }
 
-  const base = `/${state.currentUser.username}`;
+  const base = `#${state.currentUser.username}`;
 
   if (!state.cwd.length) return base + "/>: ";
 

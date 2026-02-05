@@ -303,7 +303,7 @@ export function CmdMv(args) {
   // Ottieni il nodo sorgente
   const sourceNode = getNode(sourcePath);
   if (!sourceNode) {
-    print(`mv: cannot stat '${source}': No such file or directory`);
+    print(`mv: cannot move or rename '${source}': No such file or directory`);
     print("");
     return;
   }
