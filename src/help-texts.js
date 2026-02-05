@@ -26,6 +26,22 @@ export const helpTexts = {
     "  cd --help    Show this help",
   ],
 
+  mv: [
+    "Usage: mv <source> <destination>",
+    "",
+    "Move or rename files and directories.",
+    "",
+    "Arguments:",
+    "  source       Path to source file/directory",
+    "  destination  Path to destination",
+    "",
+    "Examples:",
+    "  mv file.txt new.txt     Rename file.txt to new.txt",
+    "  mv file.txt folder/     Move file.txt into folder",
+    "  mv folder1/ folder2/    Move folder1 into folder2",
+    "  mv --help               Show this help",
+  ],
+
   mkdir: [
     "Usage: mkdir <directory>",
     "",

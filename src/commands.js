@@ -2,7 +2,7 @@
 
 import { state } from "./state.js";
 import { print } from "./terminal.js";
-import { getNode, saveFS, normalizePath } from "./fs.js"; // ← Importa saveFS
+import { getNode, resolvePath, normalizePath, saveFS } from "./fs.js"; // ← Importa saveFS
 import { updatePrompt } from "./prompt.js";
 
 export function cmdLs() {
@@ -19,8 +19,8 @@ export function cmdLs() {
   const W = 40;
 
   print("");
-  print(`${".".padEnd(W)}[*]`);
-  print(`${"..".padEnd(W)}[*]`);
+  print(`${"/".padEnd(W)}[dir]`);
+  print(`${"..".padEnd(W)}[dir]`);
 
   for (const [n, i] of Object.entries(node.children)) {
     let icon;
@@ -253,5 +253,118 @@ export function cmdRm(args) {
   saveFS();
 
   print(`Removed: ${targetPath}`);
+  print("");
+}
+
+export function CmdMv(args) {
+  // Validazione argomenti
+  if (args.length !== 2) {
+    print("mv: missing operand");
+    print("Usage: mv SOURCE DEST");
+    print("");
+    return;
+  }
+
+  // Controlla permessi
+  // if (state.currentUser.role === "guest") {
+  //   print("mv: permission denied");
+  //   print("");
+  //   return;
+  // }
+
+  const [source, dest] = args;
+
+  // Risolvi i percorsi usando le tue funzioni
+  const sourcePath = normalizePath(state.cwd, source);
+  const sourcePathStr = "/" + sourcePath.join("/");
+
+  // Ottieni il nodo sorgente
+  const sourceNode = getNode(sourcePath);
+  if (!sourceNode) {
+    print(`mv: cannot stat '${source}': No such file or directory`);
+    print("");
+    return;
+  }
+
+  // Non permettere di muovere la root
+  if (sourcePath.length === 0) {
+    print("mv: cannot move root directory");
+    print("");
+    return;
+  }
+
+  // Ottieni il parent della sorgente
+  const sourceParentPath = sourcePath.slice(0, -1);
+  const sourceParentNode = getNode(sourceParentPath);
+  const sourceName = sourcePath[sourcePath.length - 1];
+
+  if (!sourceParentNode || !sourceParentNode.children) {
+    print("mv: source parent directory error");
+    print("");
+    return;
+  }
+
+  // Risolvi la destinazione
+  const destPath = normalizePath(state.cwd, dest);
+  const destNode = getNode(destPath);
+
+  let finalDestPath;
+  let finalDestParentPath;
+  let finalDestName;
+
+  // Se dest è una directory esistente, sposta dentro
+  if (destNode && destNode.type === "dir") {
+    finalDestPath = [...destPath, sourceName];
+    finalDestParentPath = destPath;
+    finalDestName = sourceName;
+  } else {
+    // Altrimenti usa dest come nuovo nome/percorso
+    finalDestPath = destPath;
+    finalDestParentPath = destPath.slice(0, -1);
+    finalDestName = destPath[destPath.length - 1];
+  }
+
+  // Ottieni il parent di destinazione
+  const destParentNode = getNode(finalDestParentPath);
+
+  if (!destParentNode || !destParentNode.children) {
+    print(
+      `mv: cannot move '${source}' to '${dest}': No such file or directory`,
+    );
+    print("");
+    return;
+  }
+
+  // Controlla se la destinazione esiste già
+  if (destParentNode.children[finalDestName]) {
+    print(`mv: cannot move '${source}' to '${dest}': File exists`);
+    print("");
+    return;
+  }
+
+  // Previeni loop: non si può muovere una directory dentro se stessa
+  if (sourceNode.type === "dir") {
+    const sourcePathStr = "/" + sourcePath.join("/");
+    const finalDestPathStr = "/" + finalDestPath.join("/");
+
+    if (finalDestPathStr.startsWith(sourcePathStr + "/")) {
+      print(
+        `mv: cannot move '${source}' to a subdirectory of itself, '${dest}'`,
+      );
+      print("");
+      return;
+    }
+  }
+
+  // Esegui lo spostamento
+  // 1. Aggiungi alla destinazione
+  destParentNode.children[finalDestName] = sourceNode;
+
+  // 2. Rimuovi dalla sorgente
+  delete sourceParentNode.children[sourceName];
+
+  // 3. Salva il filesystem
+  saveFS();
+
   print("");
 }

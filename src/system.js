@@ -15,7 +15,7 @@ export function cmdHelp() {
   print("");
   print("NEXTOS TERMINAL - Quick Reference");
   print("");
-  print("Files:     ls, cd, mkdir, rmdir, rm [-r]");
+  print("Files:     ls, cd, mv, mkdir, rmdir, rm [-r]");
   print("System:    clear, reboot, time, version");
   print("User:      login, logout");
   print("Other:     vi, theme, help");
