@@ -2,7 +2,7 @@
 
 import { state } from "./state.js";
 import { print } from "./terminal.js";
-import { getNode, saveFS } from "./fs.js";
+import { getNode, saveFS, isValidName } from "./fs.js";
 import { dom } from "./dom.js";
 
 let editorFilename = "";
@@ -43,6 +43,13 @@ export function openEditor(filename) {
   editorMode = "NORMAL";
   editorCursorLine = 0;
   commandBuffer = "";
+
+  if (!isValidName(editorFilename)) {
+    print(`mkdir: invalid file name: '${editorFilename}'`);
+    print("");
+    state.editorActive = false;
+    return;
+  }
 
   // Carica contenuto se il file esiste
   if (currentNode.children[filename]) {

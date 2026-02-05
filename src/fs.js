@@ -112,3 +112,18 @@ export function normalizePath(cwd, path) {
 
   return stack;
 }
+
+export function isValidName(name) {
+  if (!name) return false;
+
+  // Niente . o ..
+  if (name === "." || name === "..") return false;
+
+  // Deve iniziare con lettera
+  if (!/^[a-zA-Z]/.test(name)) return false;
+
+  // Solo caratteri ammessi
+  if (!/^[a-zA-Z][a-zA-Z0-9._-]*$/.test(name)) return false;
+
+  return true;
+}

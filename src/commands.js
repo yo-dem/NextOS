@@ -2,7 +2,7 @@
 
 import { state } from "./state.js";
 import { print } from "./terminal.js";
-import { getNode, resolvePath, normalizePath, saveFS } from "./fs.js"; // ← Importa saveFS
+import { getNode, isValidName, normalizePath, saveFS } from "./fs.js"; // ← Importa saveFS
 import { updatePrompt } from "./prompt.js";
 
 export function cmdLs() {
@@ -94,6 +94,12 @@ export function cmdMkdir(dirName) {
   //   print("");
   //   return;
   // }
+
+  if (!isValidName(dirName)) {
+    print(`mkdir: invalid directory name: '${dirName}'`);
+    print("");
+    return;
+  }
 
   const currentNode = getNode(state.cwd);
 
