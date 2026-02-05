@@ -12,6 +12,9 @@ export const themes = {
       caret: "#00ff8894",
       header: "#afc2bb",
       footer: "#00aa66",
+      dir: "#00ff88be",
+      lnk: "#00ff88be",
+      txt: "#00ff88be",
     },
   },
   amber: {
@@ -23,6 +26,9 @@ export const themes = {
       caret: "#ffb000cc",
       header: "#d4a574",
       footer: "#cc8800",
+      dir: "#ffb000",
+      lnk: "#ffb000",
+      txt: "#ffb000",
     },
   },
   apple2: {
@@ -34,6 +40,9 @@ export const themes = {
       caret: "#00ff00",
       header: "#33ff33",
       footer: "#00cc00",
+      dir: "#00ff00",
+      lnk: "#00ff00",
+      txt: "#00ff00",
     },
   },
   ibm: {
@@ -45,6 +54,9 @@ export const themes = {
       caret: "#aaaaaae0",
       header: "#ffffff",
       footer: "#888888",
+      dir: "#aaaaaa",
+      lnk: "#aaaaaa",
+      txt: "#aaaaaa",
     },
   },
   vt100: {
@@ -56,6 +68,9 @@ export const themes = {
       caret: "#ffa600dd",
       header: "#ffbb44",
       footer: "#cc8800",
+      dir: "#ffa600",
+      lnk: "#ffa600",
+      txt: "#ffa600",
     },
   },
   monochrome: {
@@ -67,6 +82,9 @@ export const themes = {
       caret: "#e0e0e0dd",
       header: "#f5f5f5",
       footer: "#c0c0c0",
+      dir: "#e0e0e0",
+      lnk: "#e0e0e0",
+      txt: "#e0e0e0",
     },
   },
   zenburn: {
@@ -78,6 +96,9 @@ export const themes = {
       caret: "#dcdcccdd",
       header: "#8cd0d3",
       footer: "#5f7f5f",
+      dir: "#dcdccc",
+      lnk: "#dcdccc",
+      txt: "#dcdccc",
     },
   },
   dracula: {
@@ -89,6 +110,9 @@ export const themes = {
       caret: "#f8f8f265",
       header: "#8be9fd",
       footer: "#6272a4",
+      dir: "#fcfcb2",
+      lnk: "#a0f2f8",
+      txt: "#ffffff",
     },
   },
   atari: {
@@ -100,6 +124,9 @@ export const themes = {
       caret: "#00ff00dd",
       header: "#ffffff",
       footer: "#00cc00",
+      dir: "#00ff00",
+      lnk: "#00ff00",
+      txt: "#00ff00",
     },
   },
   terminal: {
@@ -111,6 +138,9 @@ export const themes = {
       caret: "#ffffffdd",
       header: "#eeeeee",
       footer: "#aaaaaa",
+      dir: "#ffffff",
+      lnk: "#ffffff",
+      txt: "#ffffff",
     },
   },
   ocean: {
@@ -122,6 +152,9 @@ export const themes = {
       caret: "#7dd3fcdd",
       header: "#bae6fd",
       footer: "#0284c7",
+      dir: "#7dd3fc",
+      lnk: "#7dd3fc",
+      txt: "#7dd3fc",
     },
   },
 };
@@ -138,6 +171,9 @@ export function applyTheme(themeName) {
   root.style.setProperty("--prompt-color", theme.colors.prompt);
   root.style.setProperty("--caret-color", theme.colors.caret);
   root.style.setProperty("--header-color", theme.colors.header);
+  root.style.setProperty("--dir-color", theme.colors.dir);
+  root.style.setProperty("--lnk-color", theme.colors.lnk);
+  root.style.setProperty("--txt-color", theme.colors.txt);
   root.style.setProperty("--footer-color", theme.colors.footer);
 
   return true;

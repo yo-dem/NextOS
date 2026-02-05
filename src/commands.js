@@ -14,39 +14,55 @@ export function cmdLs() {
   }
 
   let files = 0;
+  let links = 0;
   let dirs = 0;
 
-  const W = 40;
+  const W = 50;
+
+  // Organizza gli elementi per tipo
+  const entries = Object.entries(node.children);
+
+  const directories = entries
+    .filter(([_, i]) => i.type === "dir")
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const linkFiles = entries
+    .filter(([_, i]) => i.type === "lnk")
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const textFiles = entries
+    .filter(([_, i]) => i.type === "txt")
+    .sort((a, b) => a[0].localeCompare(b[0]));
 
   print("");
-  print(`${"/".padEnd(W)}[dir]`);
-  print(`${"..".padEnd(W)}[dir]`);
 
-  for (const [n, i] of Object.entries(node.children)) {
-    let icon;
-    if (i.type === "dir") icon = "[dir]";
-    if (i.type === "app") icon = "[prg]";
-    if (i.type === "txt") icon = "[txt]";
-    const name = n.padEnd(W);
+  // 1. Mostra directory
+  for (const [n, i] of directories) {
+    dirs++;
+    let name = "▸ " + n.padEnd(W - 2);
+    print(`${name}[dir]`);
+  }
 
-    if (i.type === "dir") {
-      dirs++;
-      print(`${name}${icon}`);
-    } else {
-      files++;
+  // 2. Mostra links
+  for (const [n, i] of linkFiles) {
+    links++;
+    let name = "  " + n.padEnd(W - 2);
+    print(`${name}[lnk]`);
+  }
 
-      let size = i.size ?? 0;
+  // 3. Mostra file
+  for (const [n, i] of textFiles) {
+    files++;
+    let size = i.size ?? 0;
 
-      if (typeof size === "number") {
-        size = `${size} KB`;
-      }
-
-      print(`${name}${icon} ${size}`);
+    if (typeof size === "number") {
+      size = `${size} KB`;
     }
+
+    let name = "  " + n.padEnd(W - 2);
+    print(`${name}[txt] size: ${size}`);
   }
 
   print("");
-  print(`${dirs} dir, ${files} file`);
+  print(`${dirs} dir, ${files} file, ${links} link`);
   print("");
 }
 

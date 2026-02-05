@@ -7,6 +7,15 @@ export function print(text = "") {
   div.className = "line";
 
   if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
+  if (text.includes("[dir]")) {
+    div.classList.add("dir");
+  }
+  if (text.includes("[lnk]")) {
+    div.classList.add("lnk");
+  }
+  if (text.includes("[txt]")) {
+    div.classList.add("txt");
+  }
 
   div.textContent = text || "\u00A0";
 

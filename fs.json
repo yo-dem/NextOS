@@ -6,18 +6,15 @@
       "type": "dir",
       "children": {
         "ball": {
-          "type": "app",
-          "size": 1024,
+          "type": "lnk",
           "url": "https://server404.it/apps/Ball/"
         },
         "bubble": {
-          "type": "app",
-          "size": 202,
+          "type": "lnk",
           "url": "https://server404.it/apps/Bubble/"
         },
         "glitch": {
-          "type": "app",
-          "size": 2048,
+          "type": "lnk",
           "url": "https://server404.it/apps/Glitch/"
         }
       }
@@ -26,7 +23,7 @@
       "type": "dir",
       "children": {
         "google": {
-          "type": "app",
+          "type": "lnk",
           "size": 15,
           "url": "https://google.com"
         }

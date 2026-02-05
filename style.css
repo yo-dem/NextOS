@@ -11,6 +11,9 @@
   --caret-color: #00ff8894;
   --header-color: #afc2bb;
   --footer-color: #00aa66;
+  --dir-color: #00ff88be;
+  --lnk-color: #00ff88be;
+  --txt-color: #00ff88be;
   --selection-color: rgba(116, 116, 116, 0.623);
 }
 
@@ -34,6 +37,8 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  cursor: none;
 }
 
 /* =========================================================
@@ -84,6 +89,7 @@ body {
   display: flex;
   align-items: center;
   min-height: 1.5em;
+  cursor: none;
 }
 
 .hidden {
@@ -129,6 +135,7 @@ body {
   margin-left: -2px;
 
   caret-color: transparent;
+  cursor: none;
 }
 
 /* =========================================================
@@ -172,6 +179,36 @@ body {
   margin-top: 20px;
   font-size: 0.85em;
   color: var(--footer-color);
+}
+
+/* =========================================================
+   TIPI DI OGGETTI NEL FS
+   ========================================================= */
+
+.dir {
+  color: var(--dir-color);
+}
+
+.lnk {
+  color: var(--lnk-color);
+}
+
+.txt {
+  color: var(--txt-color);
+}
+
+/* =========================================================
+   SNAPPING CURSOR
+   ========================================================= */
+
+.grid-cursor {
+  position: fixed;
+  display: none;
+  background: var(--prompt-color);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 0 8px var(--prompt-color);
 }
 
 /* =========================================================
