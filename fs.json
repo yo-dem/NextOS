@@ -2,12 +2,12 @@
   "name": "/",
   "type": "dir",
   "children": {
-    "home": {
+    "apps": {
       "type": "dir",
       "children": {
-        "google": {
+        "sysMonitor": {
           "type": "lnk",
-          "url": "https://www.google.com"
+          "url": "https://server404.it/apps/sysMonitor/"
         }
       }
     }

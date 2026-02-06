@@ -3,7 +3,7 @@
 import { dom } from "./dom.js";
 import { state } from "./state.js";
 
-import { updateCaret, pauseBlink, updatePrompt } from "./prompt.js";
+import { updateCaret, pauseBlink } from "./prompt.js";
 import { print } from "./terminal.js";
 
 import {
