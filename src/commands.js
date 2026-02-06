@@ -184,7 +184,7 @@ export function cmdRmdir(path) {
     return;
   }
 
-  print(`Remove directory '${path}'? (y/N):`);
+  print(`Remove directory '${path}'? (y/n):`);
 
   state.waitingConfirm = {
     type: "rmdir",
@@ -262,10 +262,10 @@ export function cmdRm(args) {
 
   if (target.type === "dir") {
     msg = recursive
-      ? `Remove recursively '${targetPath}'? (y/N):`
+      ? `Remove recursively '${targetPath}'? (y/n):`
       : `rm: '${targetPath}': is a directory`;
   } else {
-    msg = `Remove '${targetPath}'? (y/N):`;
+    msg = `Remove '${targetPath}'? (y/n):`;
   }
 
   if (target.type === "dir" && !recursive) {
