@@ -28,7 +28,7 @@ import {
 } from "./system.js";
 
 import { cmdTheme } from "./theme.js";
-import { showHelp, hasHelpFlag } from "./help-utils.js";
+import { showHelp, hasHelpFlag } from "./help.js";
 import { openEditor } from "./editor.js";
 import { autocomplete } from "./fs.js";
 

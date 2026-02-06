@@ -2,7 +2,7 @@
 
 import { state } from "./state.js";
 import { print, clearTerminal } from "./terminal.js";
-import { getNode } from "./fs.js";
+import { getNode, normalizePath } from "./fs.js";
 import { updatePrompt } from "./prompt.js";
 import { cmdLogout } from "./login.js";
 import { VERSION } from "./config.js";
@@ -29,16 +29,18 @@ export function cmdHelp() {
    RUN APP
 ========================= */
 
-export function tryRunApp(name) {
-  const node = getNode([...state.cwd, name]);
+export function tryRunApp(inputPath) {
+  const parts = normalizePath(state.cwd, inputPath);
 
-  if (!node || node.type !== "app") {
+  const node = getNode(parts);
+
+  if (!node || node.type !== "lnk") {
     print(`Command not found: ${name}`);
     print("");
     return;
   }
 
-  print("Launching " + name + "...");
+  print("Launching " + inputPath + "...");
   window.open(node.url, "_blank");
   print("done");
   print("");

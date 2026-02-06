@@ -2,30 +2,12 @@
   "name": "/",
   "type": "dir",
   "children": {
-    "apps": {
-      "type": "dir",
-      "children": {
-        "ball": {
-          "type": "lnk",
-          "url": "https://server404.it/apps/Ball/"
-        },
-        "bubble": {
-          "type": "lnk",
-          "url": "https://server404.it/apps/Bubble/"
-        },
-        "glitch": {
-          "type": "lnk",
-          "url": "https://server404.it/apps/Glitch/"
-        }
-      }
-    },
-    "blog": {
+    "home": {
       "type": "dir",
       "children": {
         "google": {
           "type": "lnk",
-          "size": 15,
-          "url": "https://google.com"
+          "url": "https://www.google.com"
         }
       }
     }
