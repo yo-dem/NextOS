@@ -42,21 +42,17 @@ export function executeCommand() {
 
   printPrompt(raw);
 
-  if (!raw) return;
-
   const { cmd, args } = parseCommand(raw);
 
   if (state.waitingConfirm) {
     handleConfirm(cmd);
     return;
   }
-
   if (hasHelpFlag(args)) {
     showHelp(cmd);
     return;
   }
-
-  runCommand(cmd, args);
+  if (raw) runCommand(cmd, args);
 }
 
 function saveHistory(cmd) {
@@ -112,12 +108,14 @@ function runCommand(cmd, args) {
       break;
 
     case "rmdir":
-      preparePrompt();
+      dom.promptPath.textContent = ">:";
+      updateCaret();
       cmdRmdir(args[0]);
       break;
 
     case "rm":
-      preparePrompt();
+      dom.promptPath.textContent = ">:";
+      updateCaret();
       cmdRm(args);
       break;
 

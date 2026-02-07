@@ -1,11 +1,10 @@
 // src/system.js
 
-import { state } from "./state.js";
+import { state, VERSION } from "./state.js";
 import { print, clearTerminal } from "./terminal.js";
 import { getNode, normalizePath } from "./fs.js";
 import { updatePrompt } from "./prompt.js";
 import { cmdLogout } from "./login.js";
-import { VERSION } from "./config.js";
 
 /* =========================
    HELP

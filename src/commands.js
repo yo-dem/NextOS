@@ -184,7 +184,7 @@ export function cmdRmdir(path) {
     return;
   }
 
-  print(`Remove directory '${path}'? (y/n):`);
+  print(`Remove directory '${path}'? (y/N):`);
 
   state.waitingConfirm = {
     type: "rmdir",
@@ -262,10 +262,10 @@ export function cmdRm(args) {
 
   if (target.type === "dir") {
     msg = recursive
-      ? `Remove recursively '${targetPath}'? (y/n):`
+      ? `Remove recursively '${targetPath}'? (y/N):`
       : `rm: '${targetPath}': is a directory`;
   } else {
-    msg = `Remove '${targetPath}'? (y/n):`;
+    msg = `Remove '${targetPath}'? (y/N):`;
   }
 
   if (target.type === "dir" && !recursive) {
@@ -407,7 +407,7 @@ export function handleConfirm(value) {
   const confirm = state.waitingConfirm;
   state.waitingConfirm = null;
 
-  if (value.toLowerCase() !== "y") {
+  if (value.toLowerCase() !== "y" || value == "") {
     print("Aborted.");
     print("");
     updatePrompt();

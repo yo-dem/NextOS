@@ -1,28 +1,25 @@
 // src/main.js
 
-import { VERSION } from "./config.js";
+import { state, loadTheme, VERSION } from "./state.js";
 import { dom } from "./dom.js";
 import { loadFS } from "./fs.js";
-import { bootSequence } from "./boot.js";
 import { applyTheme } from "./theme.js";
-import { state, loadTheme } from "./state.js";
+import { updateCaret, pauseBlink } from "./prompt.js";
+import { executeCommand } from "./input.js";
+import { bootSequence } from "./boot.js";
 import {
   handleHistory,
   handleNavigation,
   handleLoginMode,
 } from "./handlers.js";
-import { updateCaret, pauseBlink } from "./prompt.js";
-import { executeCommand } from "./input.js";
 
 async function start() {
-  dom.version.innerText = VERSION;
+  await loadFS();
 
-  dom.input.disabled = true;
+  dom.version.innerText = VERSION;
 
   const savedTheme = loadTheme();
   applyTheme(savedTheme);
-
-  await loadFS();
 
   bootSequence();
 
