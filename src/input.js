@@ -19,10 +19,9 @@ import {
   cmdPrintDateTime,
   cmdPrintVersion,
   cmdLogin,
+  cmdRunApp,
   handleConfirm,
 } from "./commands.js";
-
-import { tryRunApp } from "./system.js";
 
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help.js";
@@ -103,7 +102,7 @@ function runCommand(cmd, args) {
       break;
 
     default:
-      tryRunApp(cmd);
+      cmdRunApp(cmd);
   }
 }
 

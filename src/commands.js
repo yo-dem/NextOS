@@ -1,10 +1,10 @@
 // src/commands.js
 
 import { state, saveUser, VERSION } from "./state.js";
-import { print, clearTerminal } from "./terminal.js";
-import { getNode, isValidName, normalizePath, saveFS } from "./fs.js"; // ← Importa saveFS
-import { updatePrompt, updateCaret } from "./prompt.js";
 import { dom } from "./dom.js";
+import { getNode, isValidName, normalizePath, saveFS } from "./fs.js";
+import { updatePrompt, updateCaret } from "./prompt.js";
+import { print } from "./terminal.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -515,6 +515,31 @@ export function cmdLogin() {
   updatePrompt();
 
   print("Insert username:");
+  print("");
+}
+
+export function cmdRunApp(inputPath) {
+  const parts = normalizePath(state.cwd, inputPath);
+
+  const node = getNode(parts);
+
+  if (!node || node.type !== "lnk") {
+    print(`Command not found: ${inputPath}`);
+    print("");
+    return;
+  }
+
+  // Get current theme from localStorage or default to classic
+  const currentTheme = localStorage.getItem("terminal_theme") || "classic";
+
+  // Build URL with theme parameter
+  let appUrl = node.url;
+  const separator = appUrl.includes("?") ? "&" : "?";
+  appUrl += `${separator}theme=${currentTheme}`;
+
+  print("Launching " + inputPath + "...");
+  window.open(appUrl, "_blank");
+  print("done");
   print("");
 }
 
