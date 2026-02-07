@@ -9,7 +9,7 @@ import { dom } from "./dom.js";
    LOGIN START
 ========================= */
 
-export function startLogin() {
+export function cmdLogin() {
   clearTerminal();
 
   state.isLoggingIn = true;

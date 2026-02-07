@@ -3,7 +3,7 @@
 import { dom } from "./dom.js";
 import { state } from "./state.js";
 
-import { updateCaret, pauseBlink } from "./prompt.js";
+import { printPrompt, updateCaret, pauseBlink } from "./prompt.js";
 import { print } from "./terminal.js";
 
 import {
@@ -16,7 +16,7 @@ import {
   handleConfirm,
 } from "./commands.js";
 
-import { startLogin, handleLogin, cmdLogout } from "./login.js";
+import { cmdLogin, handleLogin, cmdLogout } from "./login.js";
 
 import {
   tryRunApp,
@@ -32,26 +32,7 @@ import { showHelp, hasHelpFlag } from "./help.js";
 import { openEditor } from "./editor.js";
 import { autocomplete } from "./fs.js";
 
-function printPrompt(command) {
-  const line = document.createElement("div");
-  line.className = "line";
-
-  const path = document.createElement("span");
-  path.className = "prompt-path";
-  path.textContent = document.getElementById("promptPath").textContent;
-
-  const cmd = document.createElement("span");
-  cmd.textContent = command;
-
-  line.appendChild(path);
-  line.appendChild(cmd);
-
-  dom.terminal.insertBefore(line, dom.terminal.querySelector(".prompt"));
-
-  dom.terminal.scrollTop = dom.terminal.scrollHeight;
-}
-
-function executeCommand() {
+export function executeCommand() {
   const raw = dom.input.value.trim();
 
   if (raw) {
@@ -137,7 +118,7 @@ function executeCommand() {
       break;
 
     case "login":
-      startLogin();
+      cmdLogin();
       break;
 
     case "theme":
@@ -153,28 +134,6 @@ function executeCommand() {
       tryRunApp(cmd);
   }
 }
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Tab") {
-    e.preventDefault();
-    const input = dom.input.value;
-
-    const result = autocomplete(input, state.cwd);
-
-    if (result.matches.length === 0) return;
-
-    const base = result.parts.join(" ");
-    const spacer = base ? " " : "";
-
-    if (result.matches.length === 1) {
-      dom.input.value = base + spacer + result.basePath + result.matches[0];
-    } else {
-      print(result.matches.join("  "));
-    }
-
-    updateCaret();
-  }
-});
 
 dom.input.addEventListener("keydown", (e) => {
   // Se l'editor è attivo, non processare input del terminal
@@ -237,14 +196,30 @@ dom.input.addEventListener("keydown", (e) => {
     return;
   }
 
-  /* EXECUTE */
-  if (e.key === "Enter") {
-    executeCommand();
-    return;
-  }
-
   requestAnimationFrame(updateCaret);
   pauseBlink();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const input = dom.input.value;
+
+    const result = autocomplete(input, state.cwd);
+
+    if (result.matches.length === 0) return;
+
+    const base = result.parts.join(" ");
+    const spacer = base ? " " : "";
+
+    if (result.matches.length === 1) {
+      dom.input.value = base + spacer + result.basePath + result.matches[0];
+    } else {
+      print(result.matches.join("  "));
+    }
+
+    updateCaret();
+  }
 });
 
 // INPUT
