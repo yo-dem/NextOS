@@ -1,0 +1,888 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NextOS :: System Monitor</title>
+
+    <style>
+      /* ==================================================
+         NEXTOS THEME SYSTEM
+         ================================================== */
+
+      :root {
+        /* Default theme: Dracula */
+        --bg-primary: #282a36;
+        --bg-secondary: #383a49;
+        --bg-panel: #21222c;
+        --border-primary: #50fa7b;
+        --border-secondary: #44475a;
+        --text-primary: #f8f8f2;
+        --text-secondary: #8be9fd;
+        --text-dim: #6272a4;
+        --accent-warn: #ffb86c;
+        --accent-danger: #ff5555;
+        --glow: rgba(80, 250, 123, 0.3);
+
+        /* Typography */
+        --font-mono: "Courier New", Courier, monospace;
+        --font-size-xs: 11px;
+        --font-size-sm: 13px;
+        --font-size-md: 15px;
+        --font-size-lg: 18px;
+        --font-size-xl: 24px;
+
+        /* Spacing */
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 12px;
+        --space-lg: 20px;
+        --space-xl: 32px;
+
+        /* Dimensions */
+        --header-height: 50px;
+        --border-width: 1px;
+        --border-radius: 2px;
+
+        /* Animation */
+        --transition-fast: 0.15s ease;
+        --transition-normal: 0.3s ease;
+        --transition-slow: 0.6s ease;
+      }
+
+      /* Classic Green Theme */
+      [data-theme="classic"] {
+        --bg-primary: #0f0f0f;
+        --bg-secondary: #1a1a1a;
+        --bg-panel: #050a08;
+        --border-primary: #00ff88;
+        --border-secondary: #00aa66;
+        --text-primary: #00ff88be;
+        --text-secondary: #3cff01;
+        --text-dim: #00aa66;
+        --accent-warn: #ffb347;
+        --accent-danger: #ff4444;
+        --glow: rgba(0, 255, 136, 0.3);
+      }
+
+      /* Amber Theme */
+      [data-theme="amber"] {
+        --bg-primary: #1a0f00;
+        --bg-secondary: #2a1a00;
+        --bg-panel: #150a00;
+        --border-primary: #ffd700;
+        --border-secondary: #cc8800;
+        --text-primary: #ffb000;
+        --text-secondary: #ffd700;
+        --text-dim: #cc8800;
+        --accent-warn: #ff8800;
+        --accent-danger: #ff4444;
+        --glow: rgba(255, 215, 0, 0.3);
+      }
+
+      /* Apple II Theme */
+      [data-theme="apple2"] {
+        --bg-primary: #000000;
+        --bg-secondary: #0a0a0a;
+        --bg-panel: #000000;
+        --border-primary: #00ff00;
+        --border-secondary: #00cc00;
+        --text-primary: #00ff00;
+        --text-secondary: #33ff33;
+        --text-dim: #00aa00;
+        --accent-warn: #ffff00;
+        --accent-danger: #ff0000;
+        --glow: rgba(0, 255, 0, 0.3);
+      }
+
+      /* IBM DOS Theme */
+      [data-theme="ibm"] {
+        --bg-primary: #000000;
+        --bg-secondary: #0a0a0a;
+        --bg-panel: #000000;
+        --border-primary: #55ffff;
+        --border-secondary: #0088aa;
+        --text-primary: #aaaaaa;
+        --text-secondary: #55ffff;
+        --text-dim: #888888;
+        --accent-warn: #ffff55;
+        --accent-danger: #ff5555;
+        --glow: rgba(85, 255, 255, 0.3);
+      }
+
+      /* Ocean Blue Theme */
+      [data-theme="ocean"] {
+        --bg-primary: #001b2e;
+        --bg-secondary: #002b3e;
+        --bg-panel: #00111e;
+        --border-primary: #38bdf8;
+        --border-secondary: #0284c7;
+        --text-primary: #7dd3fc;
+        --text-secondary: #38bdf8;
+        --text-dim: #0284c7;
+        --accent-warn: #fbbf24;
+        --accent-danger: #ef4444;
+        --glow: rgba(56, 189, 248, 0.3);
+      }
+
+      /* Dracula Theme (default) */
+      [data-theme="dracula"] {
+        --bg-primary: #282a36;
+        --bg-secondary: #383a49;
+        --bg-panel: #21222c;
+        --border-primary: #50fa7b;
+        --border-secondary: #44475a;
+        --text-primary: #f8f8f2;
+        --text-secondary: #8be9fd;
+        --text-dim: #6272a4;
+        --accent-warn: #ffb86c;
+        --accent-danger: #ff5555;
+        --glow: rgba(80, 250, 123, 0.3);
+      }
+
+      /* ==================================================
+         GLOBAL RESET
+         ================================================== */
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-md);
+        line-height: 1.5;
+      }
+
+      /* ==================================================
+         LAYOUT STRUCTURE
+         ================================================== */
+
+      .nextos-app {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* Header */
+      .nextos-header {
+        height: var(--header-height);
+        min-height: var(--header-height);
+        background: var(--bg-panel);
+        border-bottom: var(--border-width) solid var(--border-primary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--space-lg);
+        position: relative;
+        z-index: 100;
+      }
+
+      .nextos-title {
+        font-size: var(--font-size-md);
+        color: var(--border-primary);
+        text-shadow: 0 0 10px var(--glow);
+        letter-spacing: 2px;
+      }
+
+      .nextos-header-info {
+        display: flex;
+        gap: var(--space-lg);
+        align-items: center;
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+      }
+
+      /* Close button */
+      .nextos-close {
+        width: 32px;
+        height: 32px;
+        background: transparent;
+        border: var(--border-width) solid var(--border-secondary);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-size: var(--font-size-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-fast);
+        position: relative;
+      }
+
+      .nextos-close:hover {
+        border-color: var(--accent-danger);
+        color: var(--accent-danger);
+        background: rgba(255, 68, 68, 0.1);
+        box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+      }
+
+      .nextos-close:active {
+        transform: scale(0.95);
+      }
+
+      /* Main content */
+      .nextos-main {
+        flex: 1;
+        overflow: hidden;
+        padding: var(--space-lg);
+        display: grid;
+        gap: var(--space-lg);
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-auto-rows: minmax(200px, 1fr);
+      }
+
+      /* ==================================================
+         PANEL COMPONENT
+         ================================================== */
+
+      .nextos-panel {
+        background: var(--bg-panel);
+        border: var(--border-width) solid var(--border-secondary);
+        padding: var(--space-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-md);
+        position: relative;
+        overflow: hidden;
+        transition: border-color var(--transition-fast);
+      }
+
+      .nextos-panel:hover {
+        border-color: var(--border-primary);
+      }
+
+      .nextos-panel-header {
+        color: var(--accent-warn);
+        font-size: var(--font-size-md);
+        border-bottom: var(--border-width) solid var(--border-secondary);
+        padding-bottom: var(--space-xs);
+        letter-spacing: 1px;
+      }
+
+      .nextos-panel-content {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+      }
+
+      /* ==================================================
+         UI COMPONENTS
+         ================================================== */
+
+      .nextos-bar {
+        width: 100%;
+        height: 20px;
+        background: var(--bg-secondary);
+        border: var(--border-width) solid var(--border-secondary);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nextos-bar-fill {
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          var(--border-secondary) 0%,
+          var(--border-primary) 50%,
+          var(--text-secondary) 100%
+        );
+        width: 0%;
+        transition: width var(--transition-normal);
+        position: relative;
+        box-shadow: 0 0 10px var(--glow);
+      }
+
+      .nextos-bar-fill::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          rgba(255, 255, 255, 0.2) 50%,
+          transparent 100%
+        );
+        animation: barShine 2s infinite;
+      }
+
+      @keyframes barShine {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .nextos-info {
+        font-size: var(--font-size-sm);
+        line-height: 1.6;
+        color: var(--text-primary);
+        white-space: pre-wrap;
+        font-family: var(--font-mono);
+      }
+
+      .nextos-info-label {
+        color: var(--text-secondary);
+        display: inline-block;
+        min-width: 80px;
+      }
+
+      .nextos-metric {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--space-xs) 0;
+        border-bottom: var(--border-width) solid var(--bg-secondary);
+      }
+
+      .nextos-metric:last-child {
+        border-bottom: none;
+      }
+
+      .nextos-metric-value {
+        color: var(--border-primary);
+        font-weight: bold;
+      }
+
+      /* ==================================================
+         CANVAS
+         ================================================== */
+
+      .nextos-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ==================================================
+         SCANLINE EFFECT
+         ================================================== */
+
+      .nextos-app::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(0, 255, 150, 0.03) 0px,
+          rgba(0, 255, 150, 0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        z-index: 9999;
+        animation: scanline 8s linear infinite;
+      }
+
+      @keyframes scanline {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(3px);
+        }
+      }
+
+      .nextos-app::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: rgba(0, 255, 150, 0.02);
+        z-index: 9998;
+        animation: flicker 0.15s infinite alternate;
+      }
+
+      @keyframes flicker {
+        0% {
+          opacity: 0.97;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* ==================================================
+         RESPONSIVE
+         ================================================== */
+
+      @media (max-width: 768px) {
+        .nextos-main {
+          grid-template-columns: 1fr;
+          padding: var(--space-md);
+        }
+
+        .nextos-header {
+          padding: 0 var(--space-md);
+        }
+
+        .nextos-title {
+          font-size: var(--font-size-md);
+        }
+
+        .nextos-header-info {
+          gap: var(--space-sm);
+          font-size: var(--font-size-xs);
+        }
+      }
+
+      /* ==================================================
+         UTILITY CLASSES
+         ================================================== */
+
+      .text-warn {
+        color: var(--accent-warn);
+      }
+
+      .text-danger {
+        color: var(--accent-danger);
+      }
+
+      .text-success {
+        color: var(--border-primary);
+      }
+
+      .glow {
+        text-shadow: 0 0 10px var(--glow);
+      }
+
+      .nextos-panel-content::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .nextos-panel-content::-webkit-scrollbar-track {
+        background: var(--bg-secondary);
+      }
+
+      .nextos-panel-content::-webkit-scrollbar-thumb {
+        background: var(--border-secondary);
+        border: 1px solid var(--bg-secondary);
+      }
+
+      .nextos-panel-content::-webkit-scrollbar-thumb:hover {
+        background: var(--border-primary);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="nextos-app" data-theme="dracula">
+      <!-- HEADER -->
+      <div class="nextos-header">
+        <div class="nextos-title">NEXTOS :: SYSTEM.MONITOR</div>
+
+        <div class="nextos-header-info">
+          <div id="clock">--:--:--</div>
+          <button class="nextos-close" onclick="closeApp()" title="Close">
+            ×
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="nextos-main">
+        <!-- CPU / MEMORY PANEL -->
+        <div class="nextos-panel">
+          <div class="nextos-panel-header">CPU & MEMORY</div>
+          <div class="nextos-panel-content">
+            <div class="nextos-bar">
+              <div id="memBar" class="nextos-bar-fill"></div>
+            </div>
+
+            <div id="memMetrics"></div>
+
+            <div class="nextos-metric">
+              <span class="nextos-info-label">CPU Cores</span>
+              <span class="nextos-metric-value" id="cores">--</span>
+            </div>
+
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Browser RAM</span>
+              <span class="nextos-metric-value" id="deviceMem">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STORAGE PANEL -->
+        <div class="nextos-panel">
+          <div class="nextos-panel-header">STORAGE</div>
+          <div class="nextos-panel-content">
+            <div class="nextos-bar">
+              <div id="storeBar" class="nextos-bar-fill"></div>
+            </div>
+
+            <div id="storeMetrics"></div>
+          </div>
+        </div>
+
+        <!-- PERFORMANCE VISUALIZATION -->
+        <div class="nextos-panel">
+          <div class="nextos-panel-header">PERFORMANCE.GRAPH</div>
+          <div class="nextos-panel-content" style="padding: 0">
+            <canvas id="perfCanvas" class="nextos-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- SYSTEM INFO -->
+        <div class="nextos-panel">
+          <div class="nextos-panel-header">SYSTEM.INFO</div>
+          <div class="nextos-panel-content">
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Platform</span>
+              <span class="nextos-metric-value" id="platform">--</span>
+            </div>
+
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Language</span>
+              <span class="nextos-metric-value" id="language">--</span>
+            </div>
+
+            <div class="nextos-metric">
+              <span class="nextos-info-label">FPS</span>
+              <span class="nextos-metric-value glow" id="fps">--</span>
+            </div>
+
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Uptime</span>
+              <span class="nextos-metric-value" id="uptime">--</span>
+            </div>
+
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Theme</span>
+              <span class="nextos-metric-value" id="themeDisplay">--</span>
+            </div>
+
+            <div
+              style="
+                margin-top: var(--space-md);
+                font-size: var(--font-size-xs);
+                color: var(--text-dim);
+              "
+            >
+              <div
+                id="userAgent"
+                style="word-break: break-all; line-height: 1.4"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ==================================================
+         THEME SYSTEM
+         ================================================== */
+
+      const THEMES = {
+        classic: "Classic Green",
+        amber: "Amber",
+        apple2: "Apple II",
+        ibm: "IBM DOS",
+        ocean: "Ocean Blue",
+        dracula: "Dracula",
+      };
+
+      function initTheme() {
+        // Get theme from URL parameter
+        const params = new URLSearchParams(window.location.search);
+        const themeParam = params.get("theme");
+
+        // Use theme parameter or fallback to dracula
+        const theme = THEMES[themeParam] ? themeParam : "dracula";
+
+        // Apply theme
+        document.querySelector(".nextos-app").setAttribute("data-theme", theme);
+
+        // Update theme display
+        document.getElementById("themeDisplay").textContent = THEMES[theme];
+      }
+
+      /* ==================================================
+         UTILITIES
+         ================================================== */
+
+      function formatBytes(bytes) {
+        return (bytes / 1024 / 1024).toFixed(2);
+      }
+
+      function formatUptime(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+
+        if (hours > 0) {
+          return `${hours}h ${minutes % 60}m`;
+        } else if (minutes > 0) {
+          return `${minutes}m ${seconds % 60}s`;
+        } else {
+          return `${seconds}s`;
+        }
+      }
+
+      /* ==================================================
+         CLOCK
+         ================================================== */
+
+      function updateClock() {
+        const now = new Date();
+        const time = now.toLocaleTimeString("en-US", { hour12: false });
+        document.getElementById("clock").textContent = time;
+      }
+
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      /* ==================================================
+         FPS COUNTER
+         ================================================== */
+
+      let lastTime = performance.now();
+      let frameCount = 0;
+      let currentFPS = 0;
+
+      function fpsLoop(timestamp) {
+        frameCount++;
+
+        if (timestamp - lastTime >= 1000) {
+          currentFPS = frameCount;
+          frameCount = 0;
+          lastTime = timestamp;
+        }
+
+        requestAnimationFrame(fpsLoop);
+      }
+
+      requestAnimationFrame(fpsLoop);
+
+      /* ==================================================
+         PERFORMANCE GRAPH
+         ================================================== */
+
+      const canvas = document.getElementById("perfCanvas");
+      const ctx = canvas.getContext("2d");
+
+      let fpsHistory = [];
+      let memHistory = [];
+      const maxHistory = 60;
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      function drawGraph() {
+        const w = canvas.width / window.devicePixelRatio;
+        const h = canvas.height / window.devicePixelRatio;
+
+        // Get current theme colors
+        const styles = getComputedStyle(document.documentElement);
+        const bgColor = styles.getPropertyValue("--bg-secondary").trim();
+        const gridColor = styles.getPropertyValue("--border-secondary").trim();
+        const fpsColor = styles.getPropertyValue("--border-primary").trim();
+        const memColor = styles.getPropertyValue("--accent-warn").trim();
+        const dimColor = styles.getPropertyValue("--text-dim").trim();
+
+        // Clear
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, w, h);
+
+        // Grid
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 0.5;
+
+        for (let i = 0; i < 5; i++) {
+          const y = (h / 4) * i;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+          ctx.stroke();
+        }
+
+        // FPS line
+        if (fpsHistory.length > 1) {
+          ctx.strokeStyle = fpsColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+
+          fpsHistory.forEach((fps, i) => {
+            const x = (w / maxHistory) * i;
+            const y = h - (fps / 60) * h * 0.8;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+
+          ctx.stroke();
+
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = fpsColor;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+
+        // Memory line
+        if (memHistory.length > 1) {
+          ctx.strokeStyle = memColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+
+          memHistory.forEach((mem, i) => {
+            const x = (w / maxHistory) * i;
+            const y = h - mem * h * 0.8;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+
+          ctx.stroke();
+        }
+
+        // Labels
+        ctx.fillStyle = dimColor;
+        ctx.font = "11px Courier New";
+        ctx.fillText("FPS", 10, 20);
+        ctx.fillStyle = memColor;
+        ctx.fillText("MEM", 10, 35);
+
+        requestAnimationFrame(drawGraph);
+      }
+
+      drawGraph();
+
+      /* ==================================================
+         MAIN UPDATE LOOP
+         ================================================== */
+
+      function updateMetrics() {
+        // MEMORY
+        if (performance.memory) {
+          const used = performance.memory.usedJSHeapSize;
+          const total = performance.memory.jsHeapSizeLimit;
+          const pct = (used / total) * 100;
+
+          document.getElementById("memBar").style.width = pct * 500 + "%";
+
+          document.getElementById("memMetrics").innerHTML = `
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Used</span>
+              <span class="nextos-metric-value">${formatBytes(used)} MB</span>
+            </div>
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Limit</span>
+              <span class="nextos-metric-value">${formatBytes(total)} MB</span>
+            </div>
+            <div class="nextos-metric">
+              <span class="nextos-info-label">Load</span>
+              <span class="nextos-metric-value ${pct > 80 ? "text-danger" : pct > 60 ? "text-warn" : "text-success"}">${pct.toFixed(1)}%</span>
+            </div>
+          `;
+
+          memHistory.push(pct / 100);
+          if (memHistory.length > maxHistory) memHistory.shift();
+        } else {
+          document.getElementById("memMetrics").innerHTML =
+            '<div class="nextos-info">Memory API not supported</div>';
+        }
+
+        // STORAGE
+        if (navigator.storage && navigator.storage.estimate) {
+          navigator.storage.estimate().then((estimate) => {
+            const used = estimate.usage || 0;
+            const quota = estimate.quota || 0;
+            const pct = quota > 0 ? (used / quota) * 100 : 0;
+
+            document.getElementById("storeBar").style.width = pct + "%";
+
+            document.getElementById("storeMetrics").innerHTML = `
+              <div class="nextos-metric">
+                <span class="nextos-info-label">Used</span>
+                <span class="nextos-metric-value">${formatBytes(used)} MB</span>
+              </div>
+              <div class="nextos-metric">
+                <span class="nextos-info-label">Quota</span>
+                <span class="nextos-metric-value">${formatBytes(quota)} MB</span>
+              </div>
+              <div class="nextos-metric">
+                <span class="nextos-info-label">Load</span>
+                <span class="nextos-metric-value ${pct > 80 ? "text-danger" : pct > 60 ? "text-warn" : "text-success"}">${pct.toFixed(1)}%</span>
+              </div>
+            `;
+          });
+        } else {
+          document.getElementById("storeMetrics").innerHTML =
+            '<div class="nextos-info">Storage API not supported</div>';
+        }
+
+        // SYSTEM INFO
+        document.getElementById("cores").textContent =
+          navigator.hardwareConcurrency || "N/A";
+        document.getElementById("deviceMem").textContent =
+          navigator.deviceMemory ? navigator.deviceMemory + " GB" : "N/A";
+        document.getElementById("platform").textContent =
+          navigator.platform || "Unknown";
+        document.getElementById("language").textContent =
+          navigator.language || "Unknown";
+        document.getElementById("userAgent").textContent =
+          navigator.userAgent || "Unknown";
+
+        // FPS
+        document.getElementById("fps").textContent = currentFPS;
+        fpsHistory.push(currentFPS);
+        if (fpsHistory.length > maxHistory) fpsHistory.shift();
+
+        // UPTIME
+        document.getElementById("uptime").textContent = formatUptime(
+          performance.now(),
+        );
+      }
+
+      setInterval(updateMetrics, 500);
+      updateMetrics();
+
+      /* ==================================================
+         CLOSE APP
+         ================================================== */
+
+      function closeApp() {
+        window.close();
+        document.body.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:24px;color:var(--border-primary);">APPLICATION TERMINATED</div>';
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeApp();
+        }
+      });
+
+      /* ==================================================
+         INIT
+         ================================================== */
+
+      initTheme();
+    </script>
+  </body>
+</html>

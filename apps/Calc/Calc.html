@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NextOS :: Calculator</title>
+
+    <style>
+      /* ==================================================
+         NEXTOS THEME SYSTEM
+         ================================================== */
+
+      :root {
+        /* Default theme: Dracula */
+        --bg-primary: #282a36;
+        --bg-secondary: #383a49;
+        --bg-panel: #21222c;
+        --border-primary: #50fa7b;
+        --border-secondary: #44475a;
+        --text-primary: #f8f8f2;
+        --text-secondary: #8be9fd;
+        --text-dim: #6272a4;
+        --accent-warn: #ffb86c;
+        --accent-danger: #ff5555;
+        --glow: rgba(80, 250, 123, 0.3);
+
+        /* Typography */
+        --font-mono: "Courier New", Courier, monospace;
+        --font-size-xs: 11px;
+        --font-size-sm: 13px;
+        --font-size-md: 15px;
+        --font-size-lg: 18px;
+        --font-size-xl: 24px;
+
+        /* Spacing */
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 12px;
+        --space-lg: 20px;
+        --space-xl: 32px;
+
+        /* Dimensions */
+        --header-height: 50px;
+        --border-width: 1px;
+
+        /* Animation */
+        --transition-fast: 0.15s ease;
+        --transition-normal: 0.3s ease;
+        --transition-slow: 0.6s ease;
+      }
+
+      /* Classic Green Theme */
+      [data-theme="classic"] {
+        --bg-primary: #0f0f0f;
+        --bg-secondary: #1a1a1a;
+        --bg-panel: #050a08;
+        --border-primary: #00ff88;
+        --border-secondary: #00aa66;
+        --text-primary: #00ff88be;
+        --text-secondary: #3cff01;
+        --text-dim: #00aa66;
+        --accent-warn: #ffb347;
+        --accent-danger: #ff4444;
+        --glow: rgba(0, 255, 136, 0.3);
+      }
+
+      /* Amber Theme */
+      [data-theme="amber"] {
+        --bg-primary: #1a0f00;
+        --bg-secondary: #2a1a00;
+        --bg-panel: #150a00;
+        --border-primary: #ffd700;
+        --border-secondary: #cc8800;
+        --text-primary: #ffb000;
+        --text-secondary: #ffd700;
+        --text-dim: #cc8800;
+        --accent-warn: #ff8800;
+        --accent-danger: #ff4444;
+        --glow: rgba(255, 215, 0, 0.3);
+      }
+
+      /* Apple II Theme */
+      [data-theme="apple2"] {
+        --bg-primary: #000000;
+        --bg-secondary: #0a0a0a;
+        --bg-panel: #000000;
+        --border-primary: #00ff00;
+        --border-secondary: #00cc00;
+        --text-primary: #00ff00;
+        --text-secondary: #33ff33;
+        --text-dim: #00aa00;
+        --accent-warn: #ffff00;
+        --accent-danger: #ff0000;
+        --glow: rgba(0, 255, 0, 0.3);
+      }
+
+      /* IBM DOS Theme */
+      [data-theme="ibm"] {
+        --bg-primary: #000000;
+        --bg-secondary: #0a0a0a;
+        --bg-panel: #000000;
+        --border-primary: #55ffff;
+        --border-secondary: #0088aa;
+        --text-primary: #aaaaaa;
+        --text-secondary: #55ffff;
+        --text-dim: #888888;
+        --accent-warn: #ffff55;
+        --accent-danger: #ff5555;
+        --glow: rgba(85, 255, 255, 0.3);
+      }
+
+      /* Ocean Blue Theme */
+      [data-theme="ocean"] {
+        --bg-primary: #001b2e;
+        --bg-secondary: #002b3e;
+        --bg-panel: #00111e;
+        --border-primary: #38bdf8;
+        --border-secondary: #0284c7;
+        --text-primary: #7dd3fc;
+        --text-secondary: #38bdf8;
+        --text-dim: #0284c7;
+        --accent-warn: #fbbf24;
+        --accent-danger: #ef4444;
+        --glow: rgba(56, 189, 248, 0.3);
+      }
+
+      /* Dracula Theme (default) */
+      [data-theme="dracula"] {
+        --bg-primary: #282a36;
+        --bg-secondary: #383a49;
+        --bg-panel: #21222c;
+        --border-primary: #50fa7b;
+        --border-secondary: #44475a;
+        --text-primary: #f8f8f2;
+        --text-secondary: #8be9fd;
+        --text-dim: #6272a4;
+        --accent-warn: #ffb86c;
+        --accent-danger: #ff5555;
+        --glow: rgba(80, 250, 123, 0.3);
+      }
+
+      /* ==================================================
+         GLOBAL RESET
+         ================================================== */
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-md);
+        line-height: 1.5;
+      }
+
+      /* ==================================================
+         APP LAYOUT
+         ================================================== */
+
+      .nextos-app {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* ==================================================
+         HEADER
+         ================================================== */
+
+      .nextos-header {
+        height: var(--header-height);
+        min-height: var(--header-height);
+        background: var(--bg-panel);
+        border-bottom: var(--border-width) solid var(--border-primary);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 var(--space-lg);
+        position: relative;
+        z-index: 100;
+      }
+
+      .nextos-title {
+        font-size: var(--font-size-md);
+        color: var(--border-primary);
+        text-shadow: 0 0 10px var(--glow);
+        letter-spacing: 2px;
+      }
+
+      .nextos-header-info {
+        display: flex;
+        gap: var(--space-lg);
+        align-items: center;
+        font-size: var(--font-size-sm);
+        color: var(--text-secondary);
+      }
+
+      /* ==================================================
+         CLOSE BUTTON
+         ================================================== */
+
+      .nextos-close {
+        width: 32px;
+        height: 32px;
+        background: transparent;
+        border: var(--border-width) solid var(--border-secondary);
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-size: var(--font-size-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition-fast);
+        position: relative;
+      }
+
+      .nextos-close:hover {
+        border-color: var(--accent-danger);
+        color: var(--accent-danger);
+        background: rgba(255, 68, 68, 0.1);
+        box-shadow: 0 0 10px rgba(255, 68, 68, 0.3);
+      }
+
+      .nextos-close:active {
+        transform: scale(0.95);
+      }
+
+      /* ==================================================
+         MAIN CONTENT AREA
+         ================================================== */
+
+      .nextos-main {
+        flex: 1;
+        overflow: auto;
+        padding: var(--space-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ==================================================
+         CALCULATOR
+         ================================================== */
+
+      .calculator {
+        width: 100%;
+        max-width: 400px;
+        background: var(--bg-panel);
+        border: var(--border-width) solid var(--border-primary);
+        padding: var(--space-lg);
+        box-shadow: 0 0 20px var(--glow);
+      }
+
+      /* Display */
+      .calc-display {
+        background: var(--bg-secondary);
+        border: var(--border-width) solid var(--border-secondary);
+        padding: var(--space-lg);
+        margin-bottom: var(--space-lg);
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-xs);
+      }
+
+      .calc-history {
+        font-size: var(--font-size-sm);
+        color: var(--text-dim);
+        min-height: 20px;
+        text-align: right;
+        word-break: break-all;
+      }
+
+      .calc-result {
+        font-size: var(--font-size-xl);
+        color: var(--border-primary);
+        text-align: right;
+        text-shadow: 0 0 10px var(--glow);
+        font-weight: bold;
+        word-break: break-all;
+        line-height: 1.2;
+      }
+
+      /* Buttons Grid */
+      .calc-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-sm);
+      }
+
+      .calc-btn {
+        background: var(--bg-secondary);
+        border: var(--border-width) solid var(--border-secondary);
+        color: var(--text-primary);
+        padding: var(--space-lg);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-lg);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .calc-btn:hover {
+        border-color: var(--border-primary);
+        background: rgba(80, 250, 123, 0.1);
+        box-shadow: 0 0 10px var(--glow);
+      }
+
+      .calc-btn:active {
+        transform: scale(0.95);
+      }
+
+      /* Special buttons */
+      .calc-btn.operator {
+        color: var(--text-secondary);
+        font-weight: bold;
+      }
+
+      .calc-btn.equals {
+        background: var(--border-primary);
+        color: var(--bg-primary);
+        border-color: var(--border-primary);
+        font-weight: bold;
+      }
+
+      .calc-btn.equals:hover {
+        box-shadow: 0 0 20px var(--glow);
+      }
+
+      .calc-btn.clear {
+        color: var(--accent-danger);
+      }
+
+      .calc-btn.wide {
+        grid-column: span 2;
+      }
+
+      /* ==================================================
+         SCANLINE EFFECT
+         ================================================== */
+
+      .nextos-app::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(0, 255, 150, 0.03) 0px,
+          rgba(0, 255, 150, 0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        z-index: 9999;
+        animation: scanline 8s linear infinite;
+      }
+
+      @keyframes scanline {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(3px);
+        }
+      }
+
+      .nextos-app::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background: rgba(0, 255, 150, 0.02);
+        z-index: 9998;
+        animation: flicker 0.15s infinite alternate;
+      }
+
+      @keyframes flicker {
+        0% {
+          opacity: 0.97;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      /* ==================================================
+         RESPONSIVE
+         ================================================== */
+
+      @media (max-width: 768px) {
+        .nextos-main {
+          padding: var(--space-md);
+        }
+
+        .calculator {
+          max-width: 100%;
+        }
+
+        .calc-btn {
+          min-height: 50px;
+          padding: var(--space-md);
+          font-size: var(--font-size-md);
+        }
+
+        .calc-result {
+          font-size: var(--font-size-lg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="nextos-app" data-theme="dracula">
+      <!-- HEADER -->
+      <div class="nextos-header">
+        <div class="nextos-title">NEXTOS :: CALCULATOR</div>
+
+        <div class="nextos-header-info">
+          <div id="clock">--:--:--</div>
+          <button class="nextos-close" onclick="closeApp()" title="Close">
+            ×
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="nextos-main">
+        <div class="calculator">
+          <!-- Display -->
+          <div class="calc-display">
+            <div class="calc-history" id="history"></div>
+            <div class="calc-result" id="result">0</div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="calc-buttons">
+            <button class="calc-btn clear" onclick="clearCalc()">C</button>
+            <button class="calc-btn clear" onclick="clearEntry()">CE</button>
+            <button class="calc-btn operator" onclick="inputOperator('/')">
+              ÷
+            </button>
+            <button class="calc-btn operator" onclick="inputOperator('*')">
+              ×
+            </button>
+
+            <button class="calc-btn" onclick="inputNumber('7')">7</button>
+            <button class="calc-btn" onclick="inputNumber('8')">8</button>
+            <button class="calc-btn" onclick="inputNumber('9')">9</button>
+            <button class="calc-btn operator" onclick="inputOperator('-')">
+              -
+            </button>
+
+            <button class="calc-btn" onclick="inputNumber('4')">4</button>
+            <button class="calc-btn" onclick="inputNumber('5')">5</button>
+            <button class="calc-btn" onclick="inputNumber('6')">6</button>
+            <button class="calc-btn operator" onclick="inputOperator('+')">
+              +
+            </button>
+
+            <button class="calc-btn" onclick="inputNumber('1')">1</button>
+            <button class="calc-btn" onclick="inputNumber('2')">2</button>
+            <button class="calc-btn" onclick="inputNumber('3')">3</button>
+            <button class="calc-btn equals" onclick="calculate()">=</button>
+
+            <button class="calc-btn wide" onclick="inputNumber('0')">0</button>
+            <button class="calc-btn" onclick="inputDecimal()">.</button>
+            <button class="calc-btn operator" onclick="backspace()">⌫</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ==================================================
+         THEME INITIALIZATION
+         ================================================== */
+
+      function initTheme() {
+        const params = new URLSearchParams(window.location.search);
+        const themeParam = params.get("theme");
+
+        const validThemes = [
+          "classic",
+          "amber",
+          "apple2",
+          "ibm",
+          "ocean",
+          "dracula",
+        ];
+
+        const theme = validThemes.includes(themeParam) ? themeParam : "dracula";
+
+        document.querySelector(".nextos-app").setAttribute("data-theme", theme);
+      }
+
+      /* ==================================================
+         CLOCK
+         ================================================== */
+
+      function updateClock() {
+        const now = new Date();
+        const time = now.toLocaleTimeString("en-US", { hour12: false });
+        document.getElementById("clock").textContent = time;
+      }
+
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      /* ==================================================
+         CALCULATOR STATE
+         ================================================== */
+
+      let currentValue = "0";
+      let previousValue = null;
+      let operator = null;
+      let waitingForOperand = false;
+
+      /* ==================================================
+         DISPLAY FUNCTIONS
+         ================================================== */
+
+      function updateDisplay() {
+        document.getElementById("result").textContent = currentValue;
+
+        // Update history
+        let historyText = "";
+        if (previousValue !== null) {
+          historyText = previousValue;
+          if (operator) {
+            const opSymbol = {
+              "+": "+",
+              "-": "-",
+              "*": "×",
+              "/": "÷",
+            };
+            historyText += " " + opSymbol[operator];
+          }
+        }
+        document.getElementById("history").textContent = historyText;
+      }
+
+      /* ==================================================
+         INPUT FUNCTIONS
+         ================================================== */
+
+      function inputNumber(num) {
+        if (waitingForOperand) {
+          currentValue = num;
+          waitingForOperand = false;
+        } else {
+          currentValue = currentValue === "0" ? num : currentValue + num;
+        }
+        updateDisplay();
+      }
+
+      function inputDecimal() {
+        if (waitingForOperand) {
+          currentValue = "0.";
+          waitingForOperand = false;
+        } else if (currentValue.indexOf(".") === -1) {
+          currentValue += ".";
+        }
+        updateDisplay();
+      }
+
+      function inputOperator(nextOperator) {
+        const inputValue = parseFloat(currentValue);
+
+        if (previousValue === null) {
+          previousValue = inputValue;
+        } else if (operator) {
+          const result = performCalculation();
+
+          currentValue = String(result);
+          previousValue = result;
+        }
+
+        waitingForOperand = true;
+        operator = nextOperator;
+        updateDisplay();
+      }
+
+      /* ==================================================
+         CALCULATION
+         ================================================== */
+
+      function performCalculation() {
+        const prev = parseFloat(previousValue);
+        const current = parseFloat(currentValue);
+
+        if (isNaN(prev) || isNaN(current)) {
+          return 0;
+        }
+
+        switch (operator) {
+          case "+":
+            return prev + current;
+          case "-":
+            return prev - current;
+          case "*":
+            return prev * current;
+          case "/":
+            return current === 0 ? "Error" : prev / current;
+          default:
+            return current;
+        }
+      }
+
+      function calculate() {
+        if (operator && previousValue !== null) {
+          const result = performCalculation();
+
+          currentValue = String(result);
+          previousValue = null;
+          operator = null;
+          waitingForOperand = false;
+          updateDisplay();
+        }
+      }
+
+      /* ==================================================
+         CLEAR FUNCTIONS
+         ================================================== */
+
+      function clearCalc() {
+        currentValue = "0";
+        previousValue = null;
+        operator = null;
+        waitingForOperand = false;
+        updateDisplay();
+      }
+
+      function clearEntry() {
+        currentValue = "0";
+        waitingForOperand = false;
+        updateDisplay();
+      }
+
+      function backspace() {
+        if (currentValue.length > 1) {
+          currentValue = currentValue.slice(0, -1);
+        } else {
+          currentValue = "0";
+        }
+        updateDisplay();
+      }
+
+      /* ==================================================
+         KEYBOARD SUPPORT
+         ================================================== */
+
+      document.addEventListener("keydown", (e) => {
+        // Numbers
+        if (e.key >= "0" && e.key <= "9") {
+          inputNumber(e.key);
+        }
+        // Operators
+        else if (e.key === "+") {
+          inputOperator("+");
+        } else if (e.key === "-") {
+          inputOperator("-");
+        } else if (e.key === "*") {
+          inputOperator("*");
+        } else if (e.key === "/") {
+          e.preventDefault();
+          inputOperator("/");
+        }
+        // Actions
+        else if (e.key === "Enter" || e.key === "=") {
+          e.preventDefault();
+          calculate();
+        } else if (e.key === ".") {
+          inputDecimal();
+        } else if (e.key === "Backspace") {
+          e.preventDefault();
+          backspace();
+        } else if (e.key === "Escape") {
+          clearCalc();
+        } else if (e.key.toLowerCase() === "c") {
+          clearEntry();
+        }
+      });
+
+      /* ==================================================
+         CLOSE APP
+         ================================================== */
+
+      function closeApp() {
+        window.close();
+        document.body.innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:24px;color:var(--border-primary);font-family:var(--font-mono);">APPLICATION TERMINATED</div>';
+      }
+
+      /* ==================================================
+         INIT
+         ================================================== */
+
+      initTheme();
+      updateDisplay();
+    </script>
+  </body>
+</html>

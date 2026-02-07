@@ -35,13 +35,21 @@ export function tryRunApp(inputPath) {
   const node = getNode(parts);
 
   if (!node || node.type !== "lnk") {
-    print(`Command not found: ${name}`);
+    print(`Command not found: ${inputPath}`);
     print("");
     return;
   }
 
+  // Get current theme from localStorage or default to classic
+  const currentTheme = localStorage.getItem("terminal_theme") || "classic";
+
+  // Build URL with theme parameter
+  let appUrl = node.url;
+  const separator = appUrl.includes("?") ? "&" : "?";
+  appUrl += `${separator}theme=${currentTheme}`;
+
   print("Launching " + inputPath + "...");
-  window.open(node.url, "_blank");
+  window.open(appUrl, "_blank");
   print("done");
   print("");
 }

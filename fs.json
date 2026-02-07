@@ -7,7 +7,15 @@
       "children": {
         "sysMonitor": {
           "type": "lnk",
-          "url": "https://server404.it/apps/sysMonitor/"
+          "url": "https://server404.it/apps/SysMonitor/SysMonitor.html"
+        },
+        "appTemplate": {
+          "type": "lnk",
+          "url": "https://server404.it/apps/AppTemplate/AppTemplate.html"
+        },
+        "calc": {
+          "type": "lnk",
+          "url": "https://server404.it/apps/Calc/Calc.html"
         }
       }
     }

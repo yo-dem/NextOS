@@ -105,10 +105,10 @@ export const themes = {
     name: "Dracula",
     colors: {
       bg: "#282a36",
-      text: "#f8f8f2",
+      text: "#f6f2f8",
       prompt: "#50fa7b",
       caret: "#f8f8f265",
-      header: "#8be9fd",
+      header: "#ffae89",
       footer: "#6272a4",
       dir: "#fcfcb2",
       lnk: "#a0f2f8",
