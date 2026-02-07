@@ -17,6 +17,24 @@ export function getPrompt() {
   return base + "/" + state.cwd.join("/") + "/>: ";
 }
 
+export function printPrompt(command) {
+  const line = document.createElement("div");
+  line.className = "line";
+
+  const path = document.createElement("span");
+  path.className = "prompt-path";
+  path.textContent = document.getElementById("promptPath").textContent;
+
+  const cmd = document.createElement("span");
+  cmd.textContent = command;
+
+  line.append(path, cmd);
+
+  dom.terminal.insertBefore(line, dom.terminal.querySelector(".prompt"));
+
+  dom.terminal.scrollTop = dom.terminal.scrollHeight;
+}
+
 export function updatePrompt() {
   dom.promptPath.textContent = getPrompt();
   updateCaret();

@@ -3,8 +3,7 @@
 import { dom } from "./dom.js";
 import { state } from "./state.js";
 
-import { updateCaret, pauseBlink } from "./prompt.js";
-import { print } from "./terminal.js";
+import { updateCaret, printPrompt } from "./prompt.js";
 
 import {
   cmdLs,
@@ -16,7 +15,7 @@ import {
   handleConfirm,
 } from "./commands.js";
 
-import { startLogin, handleLogin, cmdLogout } from "./login.js";
+import { startLogin, cmdLogout } from "./login.js";
 
 import {
   tryRunApp,
@@ -30,29 +29,6 @@ import {
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help.js";
 import { openEditor } from "./editor.js";
-import { autocomplete } from "./fs.js";
-
-/* ===========================
-   PROMPT OUTPUT
-=========================== */
-
-function printPrompt(command) {
-  const line = document.createElement("div");
-  line.className = "line";
-
-  const path = document.createElement("span");
-  path.className = "prompt-path";
-  path.textContent = document.getElementById("promptPath").textContent;
-
-  const cmd = document.createElement("span");
-  cmd.textContent = command;
-
-  line.append(path, cmd);
-
-  dom.terminal.insertBefore(line, dom.terminal.querySelector(".prompt"));
-
-  dom.terminal.scrollTop = dom.terminal.scrollHeight;
-}
 
 /* ===========================
    COMMAND EXECUTION
@@ -185,7 +161,3 @@ function preparePrompt() {
   dom.promptPath.textContent = ">:";
   updateCaret();
 }
-
-/* ===========================
-   KEYBOARD HANDLING
-=========================== */
