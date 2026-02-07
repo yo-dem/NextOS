@@ -11,70 +11,25 @@ import {
   cmdMkdir,
   cmdRmdir,
   cmdRm,
-  CmdMv,
+  cmdMv,
+  cmdHelp,
+  cmdClear,
+  cmdLogout,
   handleConfirm,
 } from "./commands.js";
 
-import { startLogin, cmdLogout } from "./login.js";
+import { startLogin } from "./login.js";
 
 import {
   tryRunApp,
   cmdReboot,
-  cmdHelp,
   cmdPrintDateTime,
   cmdPrintVersion,
-  cmdClear,
 } from "./system.js";
 
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help.js";
 import { openEditor } from "./editor.js";
-
-/* ===========================
-   COMMAND EXECUTION
-=========================== */
-
-export function executeCommand() {
-  const raw = dom.input.value.trim();
-
-  saveHistory(raw);
-  clearInput();
-
-  printPrompt(raw);
-
-  const { cmd, args } = parseCommand(raw);
-
-  if (state.waitingConfirm) {
-    handleConfirm(cmd);
-    return;
-  }
-  if (hasHelpFlag(args)) {
-    showHelp(cmd);
-    return;
-  }
-  if (raw) runCommand(cmd, args);
-}
-
-function saveHistory(cmd) {
-  if (!cmd) return;
-
-  state.history.push(cmd);
-  state.historyIndex = state.history.length;
-}
-
-export function clearInput() {
-  dom.input.value = "";
-  updateCaret();
-}
-
-function parseCommand(raw) {
-  const parts = raw.split(/\s+/);
-
-  return {
-    cmd: parts[0].toLowerCase(),
-    args: parts.slice(1),
-  };
-}
 
 /* ===========================
    DISPATCH
@@ -120,7 +75,7 @@ function runCommand(cmd, args) {
       break;
 
     case "mv":
-      CmdMv(args);
+      cmdMv(args);
       break;
 
     case "reboot":
@@ -155,7 +110,48 @@ function runCommand(cmd, args) {
   }
 }
 
-function preparePrompt() {
-  dom.promptPath.textContent = ">:";
+/* ===========================
+   COMMAND EXECUTION
+=========================== */
+
+export function executeCommand() {
+  const raw = dom.input.value.trim();
+
+  saveHistory(raw);
+  clearInput();
+
+  printPrompt(raw);
+
+  const { cmd, args } = parseCommand(raw);
+
+  if (state.waitingConfirm) {
+    handleConfirm(cmd);
+    return;
+  }
+  if (hasHelpFlag(args)) {
+    showHelp(cmd);
+    return;
+  }
+  if (raw) runCommand(cmd, args);
+}
+
+function saveHistory(cmd) {
+  if (!cmd) return;
+
+  state.history.push(cmd);
+  state.historyIndex = state.history.length;
+}
+
+export function clearInput() {
+  dom.input.value = "";
   updateCaret();
+}
+
+function parseCommand(raw) {
+  const parts = raw.split(/\s+/);
+
+  return {
+    cmd: parts[0].toLowerCase(),
+    args: parts.slice(1),
+  };
 }

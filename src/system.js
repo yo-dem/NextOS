@@ -4,25 +4,7 @@ import { state, VERSION } from "./state.js";
 import { print, clearTerminal } from "./terminal.js";
 import { getNode, normalizePath } from "./fs.js";
 import { updatePrompt } from "./prompt.js";
-import { cmdLogout } from "./login.js";
-
-/* =========================
-   HELP
-========================= */
-
-export function cmdHelp() {
-  print("");
-  print("NEXTOS TERMINAL - Quick Reference");
-  print("");
-  print("Files:     ls, cd, mv, mkdir, rmdir, rm [-r]");
-  print("System:    clear, reboot, time, version");
-  print("User:      login, logout");
-  print("Other:     vi, theme, help");
-  print("");
-  print("Use '<command> --help' for detailed info");
-  print("Example: ls --help, cd --help, rm --help");
-  print("");
-}
+import { cmdLogout } from "./commands.js";
 
 /* =========================
    RUN APP
@@ -114,14 +96,14 @@ function cmdSoftReset() {
    CLEAR SCREEN
 ========================= */
 
-export function cmdClear(silently = false) {
-  terminal.querySelectorAll(".line").forEach((l) => l.remove());
-  if (!silently) {
-    print(new Date().toLocaleString());
-    print("SYSTEM READY");
-  }
-  print("");
-}
+// export function cmdClear(silently = false) {
+//   terminal.querySelectorAll(".line").forEach((l) => l.remove());
+//   if (!silently) {
+//     print(new Date().toLocaleString());
+//     print("SYSTEM READY");
+//   }
+//   print("");
+// }
 
 /* =========================
    PRINT DATE TIME

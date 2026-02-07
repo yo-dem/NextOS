@@ -1,7 +1,7 @@
 // src/commands.js
 
-import { state } from "./state.js";
-import { print } from "./terminal.js";
+import { state, saveUser } from "./state.js";
+import { print, clearTerminal } from "./terminal.js";
 import { getNode, isValidName, normalizePath, saveFS } from "./fs.js"; // ← Importa saveFS
 import { updatePrompt } from "./prompt.js";
 
@@ -290,7 +290,7 @@ export function cmdRm(args) {
   return;
 }
 
-export function CmdMv(args) {
+export function cmdMv(args) {
   // Validazione argomenti
   if (args.length !== 2) {
     print("mv: missing operand");
@@ -401,6 +401,48 @@ export function CmdMv(args) {
   saveFS();
 
   print("");
+}
+
+export function cmdHelp() {
+  print("");
+  print("NEXTOS TERMINAL - Quick Reference");
+  print("");
+  print("Files:     ls, cd, mv, mkdir, rmdir, rm [-r]");
+  print("System:    clear, reboot, time, version");
+  print("User:      login, logout");
+  print("Other:     vi, theme, help");
+  print("");
+  print("Use '<command> --help' for detailed info");
+  print("Example: ls --help, cd --help, rm --help");
+  print("");
+}
+
+export function cmdClear(silently = false) {
+  terminal.querySelectorAll(".line").forEach((l) => l.remove());
+  if (!silently) {
+    print(new Date().toLocaleString());
+    print("SYSTEM READY");
+  }
+  print("");
+}
+
+export function cmdLogout(silently = false) {
+  state.currentUser = {
+    username: "guest",
+    role: "guest",
+  };
+
+  saveUser();
+
+  clearTerminal();
+
+  if (!silently) {
+    print("Logged out. Welcome guest.");
+    print("");
+  }
+
+  state.cwd = [];
+  updatePrompt();
 }
 
 export function handleConfirm(value) {

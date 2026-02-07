@@ -91,21 +91,21 @@ function resetLogin() {
    LOGOUT
 ========================= */
 
-export function cmdLogout(silently = false) {
-  state.currentUser = {
-    username: "guest",
-    role: "guest",
-  };
+// export function cmdLogout(silently = false) {
+//   state.currentUser = {
+//     username: "guest",
+//     role: "guest",
+//   };
 
-  saveUser();
+//   saveUser();
 
-  clearTerminal();
+//   clearTerminal();
 
-  if (!silently) {
-    print("Logged out. Welcome guest.");
-    print("");
-  }
+//   if (!silently) {
+//     print("Logged out. Welcome guest.");
+//     print("");
+//   }
 
-  state.cwd = [];
-  updatePrompt();
-}
+//   state.cwd = [];
+//   updatePrompt();
+// }
