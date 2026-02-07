@@ -39,58 +39,58 @@ export function tryRunApp(inputPath) {
    REBOOT
 ========================= */
 
-export function cmdReboot() {
-  cmdSoftReset();
+// export function cmdReboot() {
+//   cmdSoftReset();
 
-  const lines = [
-    "",
-    "Shutting down modules...",
-    " [OK] NETWORK...",
-    " [OK] IO...",
-    " [OK] MEMORY...",
-    "",
-    " [INFO] All temporary files cleared.",
-    " [INFO] System state saved successfully.",
-    "",
-    " Saving system state...",
-    "",
-    " [INFO] System state saved [OK] Preparing for reboot...",
-    "",
-  ];
+//   const lines = [
+//     "",
+//     "Shutting down modules...",
+//     " [OK] NETWORK...",
+//     " [OK] IO...",
+//     " [OK] MEMORY...",
+//     "",
+//     " [INFO] All temporary files cleared.",
+//     " [INFO] System state saved successfully.",
+//     "",
+//     " Saving system state...",
+//     "",
+//     " [INFO] System state saved [OK] Preparing for reboot...",
+//     "",
+//   ];
 
-  let index = 0;
+//   let index = 0;
 
-  const promptEl = terminal.querySelector(".prompt");
-  if (promptEl) promptEl.classList.add("hidden");
+//   const promptEl = terminal.querySelector(".prompt");
+//   if (promptEl) promptEl.classList.add("hidden");
 
-  cmdLogout(true);
+//   cmdLogout(true);
 
-  function nextLine() {
-    if (index < lines.length) {
-      print(lines[index++]);
-      setTimeout(nextLine, 150 + Math.random() * 300);
-    } else {
-      setTimeout(() => {
-        clearTerminal();
+//   function nextLine() {
+//     if (index < lines.length) {
+//       print(lines[index++]);
+//       setTimeout(nextLine, 150 + Math.random() * 300);
+//     } else {
+//       setTimeout(() => {
+//         clearTerminal();
 
-        const promptEl = terminal.querySelector(".prompt");
-        if (promptEl) promptEl.classList.remove("hidden");
-        document.getElementById("cmd").focus();
-      }, 500);
-    }
-  }
+//         const promptEl = terminal.querySelector(".prompt");
+//         if (promptEl) promptEl.classList.remove("hidden");
+//         document.getElementById("cmd").focus();
+//       }, 500);
+//     }
+//   }
 
-  setTimeout(nextLine, 800);
-}
+//   setTimeout(nextLine, 800);
+// }
 
 /* =========================
    SOFT RESET
 ========================= */
 
-function cmdSoftReset() {
-  state.cwd = [];
-  updatePrompt();
-}
+// function cmdSoftReset() {
+//   state.cwd = [];
+//   updatePrompt();
+// }
 
 /* =========================
    CLEAR SCREEN
@@ -109,16 +109,16 @@ function cmdSoftReset() {
    PRINT DATE TIME
 ========================= */
 
-export function cmdPrintDateTime() {
-  print(new Date().toLocaleString());
-  print("");
-}
+// export function cmdPrintDateTime() {
+//   print(new Date().toLocaleString());
+//   print("");
+// }
 
-/* =========================
-   PRINT VERSION
-========================= */
+// /* =========================
+//    PRINT VERSION
+// ========================= */
 
-export function cmdPrintVersion() {
-  print("" + VERSION);
-  print("");
-}
+// export function cmdPrintVersion() {
+//   print("" + VERSION);
+//   print("");
+// }

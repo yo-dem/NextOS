@@ -1,12 +1,11 @@
 // handlers.js
 
 import { dom } from "./dom.js";
-import { state } from "./state.js";
-import { clearInput } from "./input.js";
-import { updateCaret, pauseBlink } from "./prompt.js";
-import { handleLogin } from "./login.js";
+import { state, saveUser } from "./state.js";
+import { updateCaret, pauseBlink, updatePrompt } from "./prompt.js";
 import { autocomplete } from "./fs.js";
 import { print } from "./terminal.js";
+import { clearTerminal } from "./terminal.js";
 
 /* ===========================
    EVENTS DOM
@@ -43,7 +42,8 @@ export function handleLoginMode(e) {
   e.preventDefault();
 
   const value = dom.input.value.trim();
-  clearInput();
+  dom.input.value = "";
+  updateCaret();
   handleLogin(value);
 
   return true;
@@ -143,4 +143,61 @@ export function handleTab(e) {
   }
 
   updateCaret();
+}
+
+function handleLogin(value) {
+  // USERNAME
+  if (state.loginStep === 0) {
+    const user = state.fs.users.find((u) => u.username === value);
+
+    if (!user) {
+      print("User not found.");
+      print("");
+      resetLogin();
+      updatePrompt();
+      return;
+    }
+
+    state.loginUser = user;
+    state.loginStep = 1;
+
+    dom.input.value = "";
+    updateCaret();
+    print("Insert password:");
+    print("");
+    return;
+  }
+
+  // PASSWORD
+  if (state.loginStep === 1) {
+    if (state.passwordBuffer !== state.loginUser.password) {
+      print("Access Denied.");
+      print("");
+      resetLogin();
+      updatePrompt();
+      return;
+    }
+
+    state.currentUser = {
+      username: state.loginUser.username,
+      role: state.loginUser.role,
+    };
+
+    saveUser();
+
+    clearTerminal();
+
+    print(`Access Granted. Welcome, ${state.currentUser.username}!`);
+    print("");
+
+    resetLogin();
+    updatePrompt();
+  }
+}
+
+function resetLogin() {
+  state.isLoggingIn = false;
+  state.loginStep = 0;
+  state.loginUser = null;
+  dom.input.type = "text";
 }

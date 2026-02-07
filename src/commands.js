@@ -1,9 +1,10 @@
 // src/commands.js
 
-import { state, saveUser } from "./state.js";
+import { state, saveUser, VERSION } from "./state.js";
 import { print, clearTerminal } from "./terminal.js";
 import { getNode, isValidName, normalizePath, saveFS } from "./fs.js"; // ← Importa saveFS
-import { updatePrompt } from "./prompt.js";
+import { updatePrompt, updateCaret } from "./prompt.js";
+import { dom } from "./dom.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -434,7 +435,8 @@ export function cmdLogout(silently = false) {
 
   saveUser();
 
-  clearTerminal();
+  dom.input.value = "";
+  updateCaret();
 
   if (!silently) {
     print("Logged out. Welcome guest.");
@@ -443,6 +445,77 @@ export function cmdLogout(silently = false) {
 
   state.cwd = [];
   updatePrompt();
+}
+
+export function cmdReboot() {
+  state.cwd = [];
+  updatePrompt();
+
+  const lines = [
+    "",
+    "Shutting down modules...",
+    " [OK] NETWORK...",
+    " [OK] IO...",
+    " [OK] MEMORY...",
+    "",
+    " [INFO] All temporary files cleared.",
+    " [INFO] System state saved successfully.",
+    "",
+    " Saving system state...",
+    "",
+    " [INFO] System state saved [OK] Preparing for reboot...",
+    "",
+  ];
+
+  let index = 0;
+
+  const promptEl = terminal.querySelector(".prompt");
+  if (promptEl) promptEl.classList.add("hidden");
+
+  cmdLogout(true);
+
+  function nextLine() {
+    if (index < lines.length) {
+      print(lines[index++]);
+      setTimeout(nextLine, 150 + Math.random() * 300);
+    } else {
+      setTimeout(() => {
+        dom.input.value = "";
+        updateCaret();
+
+        const promptEl = terminal.querySelector(".prompt");
+        if (promptEl) promptEl.classList.remove("hidden");
+        document.getElementById("cmd").focus();
+      }, 500);
+    }
+  }
+
+  setTimeout(nextLine, 800);
+}
+
+export function cmdPrintDateTime() {
+  print(new Date().toLocaleString());
+  print("");
+}
+
+export function cmdPrintVersion() {
+  print("" + VERSION);
+  print("");
+}
+
+export function cmdLogin() {
+  dom.input.value = "";
+  updateCaret();
+
+  state.isLoggingIn = true;
+  state.loginStep = 0;
+  state.loginUser = null;
+  state.passwordBuffer = "";
+
+  updatePrompt();
+
+  print("Insert username:");
+  print("");
 }
 
 export function handleConfirm(value) {

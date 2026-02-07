@@ -15,17 +15,14 @@ import {
   cmdHelp,
   cmdClear,
   cmdLogout,
-  handleConfirm,
-} from "./commands.js";
-
-import { startLogin } from "./login.js";
-
-import {
-  tryRunApp,
   cmdReboot,
   cmdPrintDateTime,
   cmdPrintVersion,
-} from "./system.js";
+  cmdLogin,
+  handleConfirm,
+} from "./commands.js";
+
+import { tryRunApp } from "./system.js";
 
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help.js";
@@ -93,7 +90,7 @@ function runCommand(cmd, args) {
       break;
 
     case "login":
-      startLogin();
+      cmdLogin();
       break;
 
     case "theme":
@@ -142,7 +139,7 @@ function saveHistory(cmd) {
   state.historyIndex = state.history.length;
 }
 
-export function clearInput() {
+function clearInput() {
   dom.input.value = "";
   updateCaret();
 }

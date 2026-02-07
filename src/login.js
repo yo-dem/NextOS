@@ -9,83 +9,83 @@ import { dom } from "./dom.js";
    LOGIN START
 ========================= */
 
-export function startLogin() {
-  clearTerminal();
+// export function startLogin() {
+//   clearTerminal();
 
-  state.isLoggingIn = true;
-  state.loginStep = 0;
-  state.loginUser = null;
-  state.passwordBuffer = "";
+//   state.isLoggingIn = true;
+//   state.loginStep = 0;
+//   state.loginUser = null;
+//   state.passwordBuffer = "";
 
-  updatePrompt();
+//   updatePrompt();
 
-  print("Insert username:");
-  print("");
-}
+//   print("Insert username:");
+//   print("");
+// }
 
 /* =========================
    LOGIN HANDLER
 ========================= */
 
-export function handleLogin(value) {
-  // USERNAME
-  if (state.loginStep === 0) {
-    const user = state.fs.users.find((u) => u.username === value);
+// export function handleLogin(value) {
+//   // USERNAME
+//   if (state.loginStep === 0) {
+//     const user = state.fs.users.find((u) => u.username === value);
 
-    if (!user) {
-      print("User not found.");
-      print("");
-      resetLogin();
-      updatePrompt();
-      return;
-    }
+//     if (!user) {
+//       print("User not found.");
+//       print("");
+//       resetLogin();
+//       updatePrompt();
+//       return;
+//     }
 
-    state.loginUser = user;
-    state.loginStep = 1;
+//     state.loginUser = user;
+//     state.loginStep = 1;
 
-    clearTerminal();
-    print("Insert password:");
-    print("");
-    return;
-  }
+//     clearTerminal();
+//     print("Insert password:");
+//     print("");
+//     return;
+//   }
 
-  // PASSWORD
-  if (state.loginStep === 1) {
-    if (state.passwordBuffer !== state.loginUser.password) {
-      print("Access Denied.");
-      print("");
-      resetLogin();
-      updatePrompt();
-      return;
-    }
+//   // PASSWORD
+//   if (state.loginStep === 1) {
+//     if (state.passwordBuffer !== state.loginUser.password) {
+//       print("Access Denied.");
+//       print("");
+//       resetLogin();
+//       updatePrompt();
+//       return;
+//     }
 
-    state.currentUser = {
-      username: state.loginUser.username,
-      role: state.loginUser.role,
-    };
+//     state.currentUser = {
+//       username: state.loginUser.username,
+//       role: state.loginUser.role,
+//     };
 
-    saveUser();
+//     saveUser();
 
-    clearTerminal();
+//     clearTerminal();
 
-    print(`Access Granted. Welcome, ${state.currentUser.username}!`);
-    print("");
+//     print(`Access Granted. Welcome, ${state.currentUser.username}!`);
+//     print("");
 
-    resetLogin();
-    updatePrompt();
-  }
-}
+//     resetLogin();
+//     updatePrompt();
+//   }
+// }
 
-/* =========================
-   RESET
-========================= */
+// /* =========================
+//    RESET
+// ========================= */
 
-function resetLogin() {
-  state.isLoggingIn = false;
-  state.loginStep = 0;
-  state.loginUser = null;
-  dom.input.type = "text";
-}
+// function resetLogin() {
+//   state.isLoggingIn = false;
+//   state.loginStep = 0;
+//   state.loginUser = null;
+//   dom.input.type = "text";
+// }
 
 /* =========================
    LOGOUT
