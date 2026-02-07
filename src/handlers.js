@@ -161,8 +161,7 @@ function handleLogin(value) {
     state.loginUser = user;
     state.loginStep = 1;
 
-    dom.input.value = "";
-    updateCaret();
+    clearTerminal();
     print("Insert password:");
     print("");
     return;

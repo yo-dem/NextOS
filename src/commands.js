@@ -1,10 +1,10 @@
-// src/commands.js
+// commands.js
 
 import { state, saveUser, VERSION } from "./state.js";
 import { dom } from "./dom.js";
 import { getNode, isValidName, normalizePath, saveFS } from "./fs.js";
 import { updatePrompt, updateCaret } from "./prompt.js";
-import { print } from "./terminal.js";
+import { clearTerminal, print } from "./terminal.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -504,8 +504,7 @@ export function cmdPrintVersion() {
 }
 
 export function cmdLogin() {
-  dom.input.value = "";
-  updateCaret();
+  clearTerminal();
 
   state.isLoggingIn = true;
   state.loginStep = 0;
