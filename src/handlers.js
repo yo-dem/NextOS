@@ -5,6 +5,7 @@ import { state } from "./state.js";
 import { clearInput } from "./input.js";
 import { updateCaret, pauseBlink } from "./prompt.js";
 import { handleLogin } from "./login.js";
+import { autocomplete } from "./fs.js";
 
 export function handleLoginMode(e) {
   if (!state.isLoggingIn) return false;
