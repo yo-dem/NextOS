@@ -112,17 +112,17 @@ export const helpTexts = {
     "  cls",
   ],
 
-  reboot: [
-    "Usage: reboot",
+  reset: [
+    "Usage: reset",
     "",
     "Description:",
-    "  Restart session.",
+    "  Set filesystem, user and theme to default.",
     "",
     "Warning:",
     "  Logs out user.",
     "",
     "Example:",
-    "  reboot",
+    "  reset",
   ],
 
   time: [

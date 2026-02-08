@@ -30,6 +30,6 @@ export function loadTheme() {
     const saved = localStorage.getItem("terminal_theme");
     return saved || "dracula";
   } catch (e) {
-    return "classic";
+    return "dracula";
   }
 }

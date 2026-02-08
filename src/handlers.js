@@ -1,4 +1,4 @@
-// handlers.js
+// src/handlers.js
 
 import { dom } from "./dom.js";
 import { state, saveUser } from "./state.js";

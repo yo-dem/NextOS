@@ -1,10 +1,11 @@
-// commands.js
+// src/commands.js
 
 import { state, saveUser, VERSION } from "./state.js";
 import { dom } from "./dom.js";
-import { getNode, isValidName, normalizePath, saveFS } from "./fs.js";
+import { getNode, isValidName, normalizePath, saveFS, loadFS } from "./fs.js";
 import { updatePrompt, updateCaret } from "./prompt.js";
 import { clearTerminal, print } from "./terminal.js";
+import { applyTheme } from "./theme.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -20,7 +21,6 @@ export function cmdLs() {
 
   const W = 50;
 
-  // Organizza gli elementi per tipo
   const entries = Object.entries(node.children);
 
   const directories = entries
@@ -116,7 +116,6 @@ export function cmdMkdir(dirName) {
     return;
   }
 
-  // Crea la directory
   currentNode.children[dirName] = {
     type: "dir",
     children: {},
@@ -132,6 +131,7 @@ export function cmdRmdir(path) {
   if (!path) {
     print("rmdir: missing directory name");
     print("");
+    updatePrompt();
     return;
   }
 
@@ -141,10 +141,8 @@ export function cmdRmdir(path) {
   //   return;
   // }
 
-  // Rimuove eventuale /
   path = path.replace(/\/+$/, "");
 
-  // Risolve path completo
   const fullPath = normalizePath(state.cwd, path);
 
   if (fullPath.length === 0) {
@@ -153,7 +151,6 @@ export function cmdRmdir(path) {
     return;
   }
 
-  // Separiamo parent / nome
   const name = fullPath.pop();
   const parentPath = fullPath;
 
@@ -162,6 +159,7 @@ export function cmdRmdir(path) {
   if (!parentNode || !parentNode.children) {
     print(`rmdir: '${path}': No such directory`);
     print("");
+    updatePrompt();
     return;
   }
 
@@ -170,6 +168,7 @@ export function cmdRmdir(path) {
   if (!target) {
     print(`rmdir: '${path}': No such directory`);
     print("");
+    updatePrompt();
     return;
   }
 
@@ -202,6 +201,7 @@ export function cmdRm(args) {
     print("rm: missing operand");
     print("Usage: rm [-r] <file|directory>");
     print("");
+    updatePrompt();
     return;
   }
 
@@ -214,7 +214,6 @@ export function cmdRm(args) {
   let recursive = false;
   let targetPath = args[0];
 
-  // Flag -r
   if (args[0] === "-r" || args[0] === "-R") {
     recursive = true;
     targetPath = args[1];
@@ -222,23 +221,21 @@ export function cmdRm(args) {
     if (!targetPath) {
       print("rm: missing operand after '-r'");
       print("");
+      updatePrompt();
       return;
     }
   }
 
-  // Rimuove / finale
   targetPath = targetPath.replace(/\/+$/, "");
-
-  // Normalizza path
   const fullPath = normalizePath(state.cwd, targetPath);
 
   if (fullPath.length === 0) {
     print("rm: cannot remove root");
     print("");
+    updatePrompt();
     return;
   }
 
-  // Parent + nome
   const name = fullPath.pop();
   const parentPath = fullPath;
 
@@ -247,6 +244,7 @@ export function cmdRm(args) {
   if (!parentNode || !parentNode.children) {
     print(`rm: '${targetPath}': No such file or directory`);
     print("");
+    updatePrompt();
     return;
   }
 
@@ -255,10 +253,10 @@ export function cmdRm(args) {
   if (!target) {
     print(`rm: '${targetPath}': No such file or directory`);
     print("");
+    updatePrompt();
     return;
   }
 
-  // Messaggio
   let msg = "";
 
   if (target.type === "dir") {
@@ -273,10 +271,10 @@ export function cmdRm(args) {
     print(msg);
     print("Use rm -r to remove directories");
     print("");
+    updatePrompt();
     return;
   }
 
-  // Chiedi conferma
   print(msg);
 
   state.waitingConfirm = {
@@ -292,7 +290,6 @@ export function cmdRm(args) {
 }
 
 export function cmdMv(args) {
-  // Validazione argomenti
   if (args.length !== 2) {
     print("mv: missing operand");
     print("Usage: mv SOURCE DEST");
@@ -300,20 +297,10 @@ export function cmdMv(args) {
     return;
   }
 
-  // Controlla permessi
-  // if (state.currentUser.role === "guest") {
-  //   print("mv: permission denied");
-  //   print("");
-  //   return;
-  // }
-
   const [source, dest] = args;
 
-  // Risolvi i percorsi usando le tue funzioni
   const sourcePath = normalizePath(state.cwd, source);
-  const sourcePathStr = "/" + sourcePath.join("/");
 
-  // Ottieni il nodo sorgente
   const sourceNode = getNode(sourcePath);
   if (!sourceNode) {
     print(`mv: cannot move or rename '${source}': No such file or directory`);
@@ -321,14 +308,12 @@ export function cmdMv(args) {
     return;
   }
 
-  // Non permettere di muovere la root
   if (sourcePath.length === 0) {
     print("mv: cannot move root directory");
     print("");
     return;
   }
 
-  // Ottieni il parent della sorgente
   const sourceParentPath = sourcePath.slice(0, -1);
   const sourceParentNode = getNode(sourceParentPath);
   const sourceName = sourcePath[sourcePath.length - 1];
@@ -339,7 +324,6 @@ export function cmdMv(args) {
     return;
   }
 
-  // Risolvi la destinazione
   const destPath = normalizePath(state.cwd, dest);
   const destNode = getNode(destPath);
 
@@ -347,19 +331,16 @@ export function cmdMv(args) {
   let finalDestParentPath;
   let finalDestName;
 
-  // Se dest è una directory esistente, sposta dentro
   if (destNode && destNode.type === "dir") {
     finalDestPath = [...destPath, sourceName];
     finalDestParentPath = destPath;
     finalDestName = sourceName;
   } else {
-    // Altrimenti usa dest come nuovo nome/percorso
     finalDestPath = destPath;
     finalDestParentPath = destPath.slice(0, -1);
     finalDestName = destPath[destPath.length - 1];
   }
 
-  // Ottieni il parent di destinazione
   const destParentNode = getNode(finalDestParentPath);
 
   if (!destParentNode || !destParentNode.children) {
@@ -370,14 +351,12 @@ export function cmdMv(args) {
     return;
   }
 
-  // Controlla se la destinazione esiste già
   if (destParentNode.children[finalDestName]) {
     print(`mv: cannot move '${source}' to '${dest}': File exists`);
     print("");
     return;
   }
 
-  // Previeni loop: non si può muovere una directory dentro se stessa
   if (sourceNode.type === "dir") {
     const sourcePathStr = "/" + sourcePath.join("/");
     const finalDestPathStr = "/" + finalDestPath.join("/");
@@ -409,7 +388,7 @@ export function cmdHelp() {
   print("NEXTOS TERMINAL - Quick Reference");
   print("");
   print("Files:     ls, cd, mv, mkdir, rmdir, rm [-r]");
-  print("System:    clear, reboot, time, version");
+  print("System:    clear, reset, time, version");
   print("User:      login, logout");
   print("Other:     vi, theme, help");
   print("");
@@ -447,50 +426,14 @@ export function cmdLogout(silently = false) {
   updatePrompt();
 }
 
-export function cmdReboot() {
-  state.cwd = [];
-  updatePrompt();
+export function cmdReset() {
+  print(`Reset? (y/N):`);
 
-  const lines = [
-    "",
-    "Shutting down modules...",
-    " [OK] NETWORK...",
-    " [OK] IO...",
-    " [OK] MEMORY...",
-    "",
-    " [INFO] All temporary files cleared.",
-    " [INFO] System state saved successfully.",
-    "",
-    " Saving system state...",
-    "",
-    " [INFO] System state saved [OK] Preparing for reboot...",
-    "",
-  ];
+  state.waitingConfirm = {
+    type: "reset",
+  };
 
-  let index = 0;
-
-  const promptEl = terminal.querySelector(".prompt");
-  if (promptEl) promptEl.classList.add("hidden");
-
-  cmdLogout(true);
-
-  function nextLine() {
-    if (index < lines.length) {
-      print(lines[index++]);
-      setTimeout(nextLine, 150 + Math.random() * 300);
-    } else {
-      setTimeout(() => {
-        dom.input.value = "";
-        updateCaret();
-
-        const promptEl = terminal.querySelector(".prompt");
-        if (promptEl) promptEl.classList.remove("hidden");
-        document.getElementById("cmd").focus();
-      }, 500);
-    }
-  }
-
-  setTimeout(nextLine, 800);
+  return;
 }
 
 export function cmdPrintDateTime() {
@@ -542,13 +485,25 @@ export function cmdRunApp(inputPath) {
   print("");
 }
 
-export function handleConfirm(value) {
+export async function handleConfirm(value) {
   const confirm = state.waitingConfirm;
   state.waitingConfirm = null;
 
   if (value.toLowerCase() !== "y" || value == "") {
     print("Aborted.");
     print("");
+    updatePrompt();
+    return;
+  }
+
+  // RESET
+  if (confirm.type === "reset") {
+    applyTheme("dracula");
+    cmdLogout(true);
+    clearTerminal(true);
+    localStorage.clear();
+    await loadFS();
+
     updatePrompt();
     return;
   }

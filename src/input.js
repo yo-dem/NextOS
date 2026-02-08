@@ -15,7 +15,7 @@ import {
   cmdHelp,
   cmdClear,
   cmdLogout,
-  cmdReboot,
+  cmdReset,
   cmdPrintDateTime,
   cmdPrintVersion,
   cmdLogin,
@@ -74,8 +74,10 @@ function runCommand(cmd, args) {
       cmdMv(args);
       break;
 
-    case "reboot":
-      cmdReboot();
+    case "reset":
+      dom.promptPath.textContent = ">:";
+      updateCaret();
+      cmdReset();
       break;
 
     case "time":
