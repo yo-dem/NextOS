@@ -14,6 +14,7 @@ let editorOverlay = null;
 let editorDisplay = null;
 let editorStatusBar = null;
 let commandBuffer = "";
+let normalBuffer = "";
 let editorDir = null;
 
 export function openEditor(path) {
@@ -259,6 +260,27 @@ function handleInsertMode(e) {
 }
 
 function handleNormalMode(e) {
+  normalBuffer += e.key;
+
+  if (normalBuffer === "dd") {
+    editorContent.splice(editorCursorLine, 1);
+
+    if (editorCursorLine >= editorContent.length) {
+      editorCursorLine--;
+    }
+
+    if (editorContent.length === 0) {
+      editorContent.push("");
+      editorCursorLine = 0;
+    }
+
+    normalBuffer = "";
+    updateEditorDisplay();
+    return;
+  }
+
+  setTimeout(() => (normalBuffer = ""), 300);
+
   switch (e.key) {
     case "i":
       editorMode = "INSERT";
@@ -271,18 +293,34 @@ function handleNormalMode(e) {
       updateStatusBar();
       return;
 
-    case "h": // sinistra (stile vim)
+    case "a":
+      editorCursorCol = editorContent[editorCursorLine].length;
+      editorMode = "INSERT";
+      updateEditorDisplay();
+      updateStatusBar();
+      return;
+
+    case "o":
+      editorContent.splice(editorCursorLine + 1, 0, "");
+      editorCursorLine++;
+      editorCursorCol = 0;
+      editorMode = "INSERT";
+      updateEditorDisplay();
+      updateStatusBar();
+      return;
+
+    case "h":
       if (editorCursorCol > 0) editorCursorCol--;
       updateEditorDisplay();
       return;
 
-    case "l": // destra
+    case "l":
       if (editorCursorCol < editorContent[editorCursorLine].length)
         editorCursorCol++;
       updateEditorDisplay();
       return;
 
-    case "k": // su
+    case "k":
       if (editorCursorLine > 0) {
         editorCursorLine--;
         clampCursorCol();
@@ -290,13 +328,25 @@ function handleNormalMode(e) {
       updateEditorDisplay();
       return;
 
-    case "j": // giù
+    case "j":
       if (editorCursorLine < editorContent.length - 1) {
         editorCursorLine++;
         clampCursorCol();
       }
       updateEditorDisplay();
       return;
+
+    case "x": {
+      const line = editorContent[editorCursorLine];
+
+      if (editorCursorCol < line.length) {
+        editorContent[editorCursorLine] =
+          line.slice(0, editorCursorCol) + line.slice(editorCursorCol + 1);
+      }
+
+      updateEditorDisplay();
+      return;
+    }
   }
 }
 
