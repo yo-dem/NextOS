@@ -148,6 +148,7 @@ export function cmdRmdir(path) {
   if (fullPath.length === 0) {
     print("rmdir: cannot remove root");
     print("");
+    updatePrompt();
     return;
   }
 
@@ -175,16 +176,20 @@ export function cmdRmdir(path) {
   if (target.type !== "dir") {
     print(`rmdir: '${path}': Not a directory`);
     print("");
+    updatePrompt();
     return;
   }
 
   if (Object.keys(target.children).length > 0) {
     print(`rmdir: '${path}': Directory not empty`);
     print("");
+    updatePrompt();
     return;
   }
 
-  print(`Remove directory '${path}'? (y/N):`);
+  print(`Remove directory '${path}'?`);
+  print("y/N:");
+  print("");
 
   state.waitingConfirm = {
     type: "rmdir",
@@ -261,10 +266,10 @@ export function cmdRm(args) {
 
   if (target.type === "dir") {
     msg = recursive
-      ? `Remove recursively '${targetPath}'? (y/N):`
+      ? `Remove recursively '${targetPath}'?\ny/N:`
       : `rm: '${targetPath}': is a directory`;
   } else {
-    msg = `Remove '${targetPath}'? (y/N):`;
+    msg = `Remove '${targetPath}'?\ny/N:`;
   }
 
   if (target.type === "dir" && !recursive) {
@@ -276,6 +281,7 @@ export function cmdRm(args) {
   }
 
   print(msg);
+  print("");
 
   state.waitingConfirm = {
     type: "rm",
@@ -427,7 +433,9 @@ export function cmdLogout(silently = false) {
 }
 
 export function cmdReset() {
-  print(`Reset? (y/N):`);
+  print(`All personal file or directory will be lost.`);
+  print("y/N:");
+  print("");
 
   state.waitingConfirm = {
     type: "reset",
@@ -472,7 +480,7 @@ export function cmdRunApp(inputPath) {
   }
 
   // Get current theme from localStorage or default to classic
-  const currentTheme = localStorage.getItem("terminal_theme") || "classic";
+  const currentTheme = localStorage.getItem("terminal_theme") || "dracula";
 
   // Build URL with theme parameter
   let appUrl = node.url;
@@ -490,7 +498,7 @@ export async function handleConfirm(value) {
   state.waitingConfirm = null;
 
   if (value.toLowerCase() !== "y" || value == "") {
-    print("Aborted.");
+    print("Action cancelled.");
     print("");
     updatePrompt();
     return;
