@@ -13,8 +13,8 @@ export const themes = {
       header: "#91c7b3",
       footer: "#00aa66",
       dir: "#00ff88",
-      lnk: "#00ff8879",
-      txt: "#afecd0be",
+      lnk: "#bbff00bd",
+      txt: "#c1ffe2",
     },
   },
   amber: {
@@ -26,79 +26,9 @@ export const themes = {
       caret: "#ffb000cc",
       header: "#d4a574",
       footer: "#cc8800",
-      dir: "#ffb000",
+      dir: "#ffd885",
       lnk: "#ffb000",
-      txt: "#ffb000",
-    },
-  },
-  apple2: {
-    name: "Apple II",
-    colors: {
-      bg: "#000000",
-      text: "#00ff00",
-      prompt: "#00ff00",
-      caret: "#00ff00",
-      header: "#33ff33",
-      footer: "#00cc00",
-      dir: "#00ff00",
-      lnk: "#00ff00",
-      txt: "#00ff00",
-    },
-  },
-  ibm: {
-    name: "IBM DOS",
-    colors: {
-      bg: "#000000",
-      text: "#aaaaaa",
-      prompt: "#55ffff",
-      caret: "#aaaaaae0",
-      header: "#ffffff",
-      footer: "#888888",
-      dir: "#aaaaaa",
-      lnk: "#aaaaaa",
-      txt: "#aaaaaa",
-    },
-  },
-  vt100: {
-    name: "VT100 Amber",
-    colors: {
-      bg: "#1e1410",
-      text: "#ffa600",
-      prompt: "#ffcc00",
-      caret: "#ffa600dd",
-      header: "#ffbb44",
-      footer: "#cc8800",
-      dir: "#ffa600",
-      lnk: "#ffa600",
-      txt: "#ffa600",
-    },
-  },
-  monochrome: {
-    name: "Monochrome White",
-    colors: {
-      bg: "#1a1a1a",
-      text: "#e0e0e0",
-      prompt: "#ffffff",
-      caret: "#e0e0e0dd",
-      header: "#f5f5f5",
-      footer: "#c0c0c0",
-      dir: "#e0e0e0",
-      lnk: "#e0e0e0",
-      txt: "#e0e0e0",
-    },
-  },
-  zenburn: {
-    name: "Zenburn",
-    colors: {
-      bg: "#3f3f3f",
-      text: "#dcdccc",
-      prompt: "#7f9f7f",
-      caret: "#dcdcccdd",
-      header: "#8cd0d3",
-      footer: "#5f7f5f",
-      dir: "#dcdccc",
-      lnk: "#dcdccc",
-      txt: "#dcdccc",
+      txt: "#fce1a7",
     },
   },
   dracula: {
@@ -115,20 +45,6 @@ export const themes = {
       txt: "#ffffff",
     },
   },
-  atari: {
-    name: "Atari ST",
-    colors: {
-      bg: "#222222",
-      text: "#00ff00",
-      prompt: "#ffff00",
-      caret: "#00ff00dd",
-      header: "#ffffff",
-      footer: "#00cc00",
-      dir: "#00ff00",
-      lnk: "#00ff00",
-      txt: "#00ff00",
-    },
-  },
   terminal: {
     name: "Ubuntu Terminal",
     colors: {
@@ -138,23 +54,9 @@ export const themes = {
       caret: "#ffffffdd",
       header: "#eeeeee",
       footer: "#aaaaaa",
-      dir: "#ffffff",
-      lnk: "#ffffff",
+      dir: "#fcfcb2",
+      lnk: "#a0f2f8",
       txt: "#ffffff",
-    },
-  },
-  ocean: {
-    name: "Ocean Blue",
-    colors: {
-      bg: "#001b2e",
-      text: "#7dd3fc",
-      prompt: "#38bdf8",
-      caret: "#7dd3fcdd",
-      header: "#bae6fd",
-      footer: "#0284c7",
-      dir: "#7dd3fc",
-      lnk: "#7dd3fc",
-      txt: "#7dd3fc",
     },
   },
 };
@@ -197,9 +99,9 @@ export function cmdTheme(args) {
 
     // Organizza per categorie
     const categories = {
-      "Classic Terminals": ["classic", "amber", "monochrome", "ibm"],
-      "Retro Computers": ["atari", "terminal", "apple2", "vt100"],
-      "Modern Themes": ["dracula", "zenburn", "ocean"],
+      "Classic Terminals": ["classic", "amber"],
+      "Retro Computers": ["terminal"],
+      "Modern Themes": ["dracula"],
     };
 
     Object.entries(categories).forEach(([category, themeIds]) => {
