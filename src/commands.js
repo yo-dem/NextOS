@@ -127,6 +127,119 @@ export function cmdMkdir(dirName) {
   print("");
 }
 
+export function cmdMkLink(args) {
+  if (!args || args.length !== 2) {
+    print("ln: missing operand");
+    print("Usage: mklink <url> <name>");
+    print("");
+    return;
+  }
+
+  const [url, name] = args;
+
+  // Controllo nome valido
+  if (!isValidName(name)) {
+    print(`mklink: invalid name: '${name}'`);
+    print("");
+    return;
+  }
+
+  // Controllo URL minimo
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    print("mklink: invalid url");
+    print("");
+    return;
+  }
+
+  // Directory corrente
+  const currentNode = getNode(state.cwd);
+
+  if (!currentNode || !currentNode.children) {
+    print("mklink: current directory error");
+    print("");
+    return;
+  }
+
+  // Nome già esistente
+  if (currentNode.children[name]) {
+    print(`mklink: '${name}' already exists`);
+    print("");
+    return;
+  }
+
+  // Crea link
+  currentNode.children[name] = {
+    type: "lnk",
+    url: url,
+  };
+
+  saveFS();
+
+  print(`Link created: ${name} -> ${url}`);
+  print("");
+}
+
+export function cmdRmLink(path) {
+  if (!path) {
+    print("rmlink: missing link name");
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  path = path.replace(/\/+$/, "");
+
+  const fullPath = normalizePath(state.cwd, path);
+
+  if (fullPath.length === 0) {
+    print("rmlink: cannot remove link");
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  const name = fullPath.pop();
+  const parentPath = fullPath;
+
+  const parentNode = getNode(parentPath);
+
+  if (!parentNode || !parentNode.children) {
+    print(`rmlink: '${path}': No such link`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  const target = parentNode.children[name];
+
+  if (!target) {
+    print(`rmlink: '${path}': No such link`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  if (target.type !== "lnk") {
+    print(`rmlink: '${path}': Not a link`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  print(`Remove link '${name}'?`);
+  print("y/N:");
+  print("");
+
+  state.waitingConfirm = {
+    type: "rmlink",
+    parentNode,
+    name,
+    path,
+  };
+
+  return;
+}
+
 export function cmdRmdir(path) {
   if (!path) {
     print("rmdir: missing directory name");
@@ -393,7 +506,7 @@ export function cmdHelp() {
   print("");
   print("NEXTOS TERMINAL - Quick Reference");
   print("");
-  print("Files:     ls, cd, mv, mkdir, rmdir, rm [-r]");
+  print("Files:     ls, cd, mv, mkdir, mklink, rmdir, rm [-r]");
   print("System:    clear, reset, time, version");
   print("User:      login, logout");
   print("Other:     vi, theme, help");
@@ -509,6 +622,8 @@ export async function handleConfirm(value) {
     applyTheme("dracula");
     cmdLogout(true);
     clearTerminal(true);
+    state.history = [];
+    state.historyIndex = -1;
     localStorage.clear();
     await loadFS();
 
@@ -519,6 +634,18 @@ export async function handleConfirm(value) {
   // RMDIR
   if (confirm.type === "rmdir") {
     delete confirm.parentNode.children[confirm.name];
+    saveFS();
+
+    print(`Removed: ${confirm.path}/`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  // RMLINK
+  if (confirm.type === "rmlink") {
+    delete confirm.parentNode.children[confirm.name];
+
     saveFS();
 
     print(`Removed: ${confirm.path}/`);

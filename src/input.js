@@ -9,7 +9,9 @@ import {
   cmdLs,
   cmdCd,
   cmdMkdir,
+  cmdMkLink,
   cmdRmdir,
+  cmdRmLink,
   cmdRm,
   cmdMv,
   cmdHelp,
@@ -58,10 +60,20 @@ function runCommand(cmd, args) {
       cmdMkdir(args[0]);
       break;
 
+    case "mklink":
+      cmdMkLink(args);
+      break;
+
     case "rmdir":
       dom.promptPath.textContent = ">:";
       updateCaret();
       cmdRmdir(args[0]);
+      break;
+
+    case "rmlink":
+      dom.promptPath.textContent = ">:";
+      updateCaret();
+      cmdRmLink(args[0]);
       break;
 
     case "rm":
@@ -149,7 +161,7 @@ function parseCommand(raw) {
   const parts = raw.split(/\s+/);
 
   return {
-    cmd: parts[0].toLowerCase(),
+    cmd: parts[0],
     args: parts.slice(1),
   };
 }

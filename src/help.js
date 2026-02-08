@@ -59,6 +59,20 @@ export const helpTexts = {
     "  mkdir test",
   ],
 
+  mklink: [
+    "Usage: mklink <url> <name>",
+    "",
+    "Description:",
+    "  Create symbolic link.",
+    "",
+    "Arguments:",
+    "  url   URL",
+    "  name  Name",
+    "",
+    "Example:",
+    "  mklink https://example.com example",
+  ],
+
   rmdir: [
     "Usage: rmdir <dir>",
     "",
