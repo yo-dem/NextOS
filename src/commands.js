@@ -7,6 +7,7 @@ import { updatePrompt, updateCaret } from "./prompt.js";
 import { clearTerminal, print } from "./terminal.js";
 import { applyTheme } from "./theme.js";
 import { openEditor } from "./editor.js";
+import { runBasicFile } from "./basic-runner.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -669,6 +670,34 @@ export function cmdOpenEditor(path) {
   openEditor(path);
 }
 
+export function cmdRun(args) {
+  if (!args || args.length === 0) {
+    print("");
+    print("Usage: run <file.bas>");
+    print("");
+    print("Execute a BASIC program from the terminal.");
+    print("");
+    updatePrompt();
+    dom.input.style.display = "block";
+    dom.input.focus();
+    return;
+  }
+
+  const filepath = args[0];
+
+  // Check extension
+  if (!filepath.endsWith(".bas")) {
+    print("");
+    print("Warning: File should have .bas extension");
+    print("");
+    updatePrompt();
+    dom.input.style.display = "block";
+    dom.input.focus();
+  }
+
+  runBasicFile(filepath);
+}
+
 export function cmdHelp() {
   print("");
   print("NEXTOS TERMINAL - Quick Reference");
@@ -677,7 +706,7 @@ export function cmdHelp() {
   print("Files:           mklink, rmlink, mv, cp, rm");
   print("System:          clear, reset, time, version");
   print("User:            login, logout");
-  print("Other:           vi, theme, help");
+  print("Other:           vi, run, theme, help");
   print("");
   print("Use '<command> --help' for detailed info");
   print("Example: ls --help, cd --help, rm --help");

@@ -4,6 +4,7 @@ import { dom } from "./dom.js";
 import { state } from "./state.js";
 
 import { updateCaret, printPrompt } from "./prompt.js";
+import { handleBasicInput } from "./basic-runner.js";
 
 import {
   cmdLs,
@@ -24,6 +25,7 @@ import {
   cmdLogin,
   cmdOpenEditor,
   cmdRunApp,
+  cmdRun,
   handleConfirm,
 } from "./commands.js";
 
@@ -120,6 +122,14 @@ function runCommand(cmd, args) {
       cmdOpenEditor(args[0]);
       break;
 
+    case "run":
+      dom.promptPath.textContent = ">:";
+      updateCaret();
+      cmdRun(args);
+      //dom.input.style.display = "none";
+
+      break;
+
     default:
       cmdRunApp(cmd);
   }
@@ -131,6 +141,15 @@ function runCommand(cmd, args) {
 
 export function executeCommand() {
   const raw = dom.input.value.trim();
+
+  if (state.waitingBasicInput) {
+    const handled = handleBasicInput(raw);
+    if (handled) {
+      dom.input.value = "";
+      updateCaret();
+      return;
+    }
+  }
 
   saveHistory(raw);
   clearInput();

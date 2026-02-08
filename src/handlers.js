@@ -6,12 +6,18 @@ import { updateCaret, pauseBlink, updatePrompt } from "./prompt.js";
 import { autocomplete } from "./fs.js";
 import { print } from "./terminal.js";
 import { clearTerminal } from "./terminal.js";
+import { requestBreak } from "./basic-runner.js";
 
 /* ===========================
    EVENTS DOM
 =========================== */
 
-document.addEventListener("keydown", handleTab);
+document.addEventListener("keydown", (e) => {
+  handleTab(e);
+  if (e.ctrlKey && e.key === "c") {
+    requestBreak();
+  }
+});
 
 dom.input.addEventListener("input", () => {
   handlePasswordMask();

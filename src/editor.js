@@ -514,6 +514,16 @@ function handleArrowKeys(e) {
         updateEditorDisplay();
       }
       return true;
+
+    case "Home":
+      editorCursorCol = 0;
+      updateEditorDisplay();
+      break;
+
+    case "End":
+      editorCursorCol = editorContent[editorCursorLine].length;
+      updateEditorDisplay();
+      break;
   }
 
   return false;

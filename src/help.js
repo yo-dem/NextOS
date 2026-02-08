@@ -227,6 +227,16 @@ export const helpTexts = {
     "  vi notes.txt",
   ],
 
+  run: [
+    "Usage: run <file.bas>",
+    "",
+    "Description:",
+    "  Run a basic program.",
+    "",
+    "Example:",
+    "  run myprogram.bas",
+  ],
+
   theme: [
     "Usage: theme [name]",
     "",
