@@ -6,6 +6,7 @@ import { getNode, isValidName, normalizePath, saveFS, loadFS } from "./fs.js";
 import { updatePrompt, updateCaret } from "./prompt.js";
 import { clearTerminal, print } from "./terminal.js";
 import { applyTheme } from "./theme.js";
+import { openEditor } from "./editor.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -88,98 +89,6 @@ export function cmdCd(path) {
   updatePrompt();
 }
 
-export function cmdCp(args) {
-  if (!args || args.length < 2) {
-    print("cp: missing operand");
-    print("Usage: cp [-r] SOURCE DEST");
-    print("");
-    return;
-  }
-
-  let recursive = false;
-  let sourcePathStr, destPathStr;
-
-  if (args[0] === "-r") {
-    recursive = true;
-    sourcePathStr = args[1];
-    destPathStr = args[2];
-    if (!sourcePathStr || !destPathStr) {
-      print("cp: missing operand for recursive copy");
-      return;
-    }
-  } else {
-    sourcePathStr = args[0];
-    destPathStr = args[1];
-  }
-
-  const sourcePath = normalizePath(state.cwd, sourcePathStr);
-  const destPath = normalizePath(state.cwd, destPathStr);
-
-  const sourceNode = getNode(sourcePath);
-  if (!sourceNode) {
-    print(`cp: '${sourcePathStr}': No such file or directory`);
-    return;
-  }
-
-  const sourceName = sourcePath[sourcePath.length - 1];
-  const sourceParent = getNode(sourcePath.slice(0, -1));
-
-  const destNode = getNode(destPath);
-  let destParent, destName;
-
-  if (destNode && destNode.type === "dir") {
-    // Copia dentro la directory
-    destParent = destNode;
-    destName = sourceName;
-  } else {
-    // Copia con nuovo nome
-    destParent = getNode(destPath.slice(0, -1));
-    destName = destPath[destPath.length - 1];
-  }
-
-  if (!destParent || !destParent.children) {
-    print(`cp: destination path invalid: '${destPathStr}'`);
-    return;
-  }
-
-  // Controllo per directory senza -r
-  if (sourceNode.type === "dir" && !recursive) {
-    print(`cp: -r not specified; omitting directory '${sourcePathStr}'`);
-    return;
-  }
-
-  // Evita copia di directory dentro se stessa
-  if (sourceNode.type === "dir") {
-    const sourceFull = "/" + sourcePath.join("/");
-    const destFull = "/" + [...destPath, sourceName].join("/");
-    if (destFull.startsWith(sourceFull + "/")) {
-      print(`cp: cannot copy '${sourcePathStr}' into a subdirectory of itself`);
-      return;
-    }
-  }
-
-  // Funzione di copia profonda
-  function deepCopy(node) {
-    if (node.type === "txt") {
-      return { ...node }; // copia superficiale va bene
-    } else if (node.type === "dir") {
-      const newDir = { type: "dir", children: {} };
-      for (const [k, v] of Object.entries(node.children)) {
-        newDir.children[k] = deepCopy(v);
-      }
-      return newDir;
-    } else if (node.type === "lnk") {
-      return { ...node };
-    }
-  }
-
-  destParent.children[destName] = deepCopy(sourceNode);
-
-  saveFS();
-  print(`Copied '${sourcePathStr}' -> '${destPathStr}'`);
-  print("");
-}
-
 export function cmdMkdir(dirName) {
   if (!dirName) {
     print("mkdir: missing directory name");
@@ -222,119 +131,6 @@ export function cmdMkdir(dirName) {
 
   print(`Created: ${dirName}/`);
   print("");
-}
-
-export function cmdMkLink(args) {
-  if (!args || args.length !== 2) {
-    print("ln: missing operand");
-    print("Usage: mklink <url> <name>");
-    print("");
-    return;
-  }
-
-  const [url, name] = args;
-
-  // Controllo nome valido
-  if (!isValidName(name)) {
-    print(`mklink: invalid name: '${name}'`);
-    print("");
-    return;
-  }
-
-  // Controllo URL minimo
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    print("mklink: invalid url");
-    print("");
-    return;
-  }
-
-  // Directory corrente
-  const currentNode = getNode(state.cwd);
-
-  if (!currentNode || !currentNode.children) {
-    print("mklink: current directory error");
-    print("");
-    return;
-  }
-
-  // Nome già esistente
-  if (currentNode.children[name]) {
-    print(`mklink: '${name}' already exists`);
-    print("");
-    return;
-  }
-
-  // Crea link
-  currentNode.children[name] = {
-    type: "lnk",
-    url: url,
-  };
-
-  saveFS();
-
-  print(`Link created: ${name} -> ${url}`);
-  print("");
-}
-
-export function cmdRmLink(path) {
-  if (!path) {
-    print("rmlink: missing link name");
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  path = path.replace(/\/+$/, "");
-
-  const fullPath = normalizePath(state.cwd, path);
-
-  if (fullPath.length === 0) {
-    print("rmlink: cannot remove link");
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  const name = fullPath.pop();
-  const parentPath = fullPath;
-
-  const parentNode = getNode(parentPath);
-
-  if (!parentNode || !parentNode.children) {
-    print(`rmlink: '${path}': No such link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  const target = parentNode.children[name];
-
-  if (!target) {
-    print(`rmlink: '${path}': No such link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  if (target.type !== "lnk") {
-    print(`rmlink: '${path}': Not a link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  print(`Remove link '${name}'?`);
-  print("y/N:");
-  print("");
-
-  state.waitingConfirm = {
-    type: "rmlink",
-    parentNode,
-    name,
-    path,
-  };
-
-  return;
 }
 
 export function cmdRmdir(path) {
@@ -505,6 +301,119 @@ export function cmdRm(args) {
   return;
 }
 
+export function cmdMkLink(args) {
+  if (!args || args.length !== 2) {
+    print("ln: missing operand");
+    print("Usage: mklink <url> <name>");
+    print("");
+    return;
+  }
+
+  const [url, name] = args;
+
+  // Controllo nome valido
+  if (!isValidName(name)) {
+    print(`mklink: invalid name: '${name}'`);
+    print("");
+    return;
+  }
+
+  // Controllo URL minimo
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    print("mklink: invalid url");
+    print("");
+    return;
+  }
+
+  // Directory corrente
+  const currentNode = getNode(state.cwd);
+
+  if (!currentNode || !currentNode.children) {
+    print("mklink: current directory error");
+    print("");
+    return;
+  }
+
+  // Nome già esistente
+  if (currentNode.children[name]) {
+    print(`mklink: '${name}' already exists`);
+    print("");
+    return;
+  }
+
+  // Crea link
+  currentNode.children[name] = {
+    type: "lnk",
+    url: url,
+  };
+
+  saveFS();
+
+  print(`Link created: ${name} -> ${url}`);
+  print("");
+}
+
+export function cmdRmLink(path) {
+  if (!path) {
+    print("rmlink: missing link name");
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  path = path.replace(/\/+$/, "");
+
+  const fullPath = normalizePath(state.cwd, path);
+
+  if (fullPath.length === 0) {
+    print("rmlink: cannot remove link");
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  const name = fullPath.pop();
+  const parentPath = fullPath;
+
+  const parentNode = getNode(parentPath);
+
+  if (!parentNode || !parentNode.children) {
+    print(`rmlink: '${path}': No such link`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  const target = parentNode.children[name];
+
+  if (!target) {
+    print(`rmlink: '${path}': No such link`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  if (target.type !== "lnk") {
+    print(`rmlink: '${path}': Not a link`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  print(`Remove link '${name}'?`);
+  print("y/N:");
+  print("");
+
+  state.waitingConfirm = {
+    type: "rmlink",
+    parentNode,
+    name,
+    path,
+  };
+
+  return;
+}
+
 export function cmdMv(args) {
   if (args.length !== 2) {
     print("mv: missing operand");
@@ -599,17 +508,95 @@ export function cmdMv(args) {
   print("");
 }
 
-export function cmdHelp() {
-  print("");
-  print("NEXTOS TERMINAL - Quick Reference");
-  print("");
-  print("Files:     ls, cd, mv, mkdir, mklink, rmdir, rm [-r]");
-  print("System:    clear, reset, time, version");
-  print("User:      login, logout");
-  print("Other:     vi, theme, help");
-  print("");
-  print("Use '<command> --help' for detailed info");
-  print("Example: ls --help, cd --help, rm --help");
+export function cmdCp(args) {
+  if (!args || args.length < 2) {
+    print("cp: missing operand");
+    print("Usage: cp [-r] SOURCE DEST");
+    print("");
+    return;
+  }
+
+  let recursive = false;
+  let sourcePathStr, destPathStr;
+
+  if (args[0] === "-r") {
+    recursive = true;
+    sourcePathStr = args[1];
+    destPathStr = args[2];
+    if (!sourcePathStr || !destPathStr) {
+      print("cp: missing operand for recursive copy");
+      return;
+    }
+  } else {
+    sourcePathStr = args[0];
+    destPathStr = args[1];
+  }
+
+  const sourcePath = normalizePath(state.cwd, sourcePathStr);
+  const destPath = normalizePath(state.cwd, destPathStr);
+
+  const sourceNode = getNode(sourcePath);
+  if (!sourceNode) {
+    print(`cp: '${sourcePathStr}': No such file or directory`);
+    return;
+  }
+
+  const sourceName = sourcePath[sourcePath.length - 1];
+  const sourceParent = getNode(sourcePath.slice(0, -1));
+
+  const destNode = getNode(destPath);
+  let destParent, destName;
+
+  if (destNode && destNode.type === "dir") {
+    // Copia dentro la directory
+    destParent = destNode;
+    destName = sourceName;
+  } else {
+    // Copia con nuovo nome
+    destParent = getNode(destPath.slice(0, -1));
+    destName = destPath[destPath.length - 1];
+  }
+
+  if (!destParent || !destParent.children) {
+    print(`cp: destination path invalid: '${destPathStr}'`);
+    return;
+  }
+
+  // Controllo per directory senza -r
+  if (sourceNode.type === "dir" && !recursive) {
+    print(`cp: -r not specified; omitting directory '${sourcePathStr}'`);
+    return;
+  }
+
+  // Evita copia di directory dentro se stessa
+  if (sourceNode.type === "dir") {
+    const sourceFull = "/" + sourcePath.join("/");
+    const destFull = "/" + [...destPath, sourceName].join("/");
+    if (destFull.startsWith(sourceFull + "/")) {
+      print(`cp: cannot copy '${sourcePathStr}' into a subdirectory of itself`);
+      return;
+    }
+  }
+
+  // Funzione di copia profonda
+  function deepCopy(node) {
+    if (node.type === "txt") {
+      return { ...node }; // copia superficiale va bene
+    } else if (node.type === "dir") {
+      const newDir = { type: "dir", children: {} };
+      for (const [k, v] of Object.entries(node.children)) {
+        newDir.children[k] = deepCopy(v);
+      }
+      return newDir;
+    } else if (node.type === "lnk") {
+      return { ...node };
+    }
+  }
+
+  destParent.children[destName] = deepCopy(sourceNode);
+
+  saveFS();
+  print(`Copied '${sourcePathStr}' -> '${destPathStr}'`);
   print("");
 }
 
@@ -620,26 +607,6 @@ export function cmdClear(silently = false) {
     print("SYSTEM READY");
   }
   print("");
-}
-
-export function cmdLogout(silently = false) {
-  state.currentUser = {
-    username: "guest",
-    role: "guest",
-  };
-
-  saveUser();
-
-  dom.input.value = "";
-  updateCaret();
-
-  if (!silently) {
-    print("Logged out. Welcome guest.");
-    print("");
-  }
-
-  state.cwd = [];
-  updatePrompt();
 }
 
 export function cmdReset() {
@@ -675,6 +642,45 @@ export function cmdLogin() {
   updatePrompt();
 
   print("Insert username:");
+  print("");
+}
+
+export function cmdLogout(silently = false) {
+  state.currentUser = {
+    username: "guest",
+    role: "guest",
+  };
+
+  saveUser();
+
+  dom.input.value = "";
+  updateCaret();
+
+  if (!silently) {
+    print("Logged out. Welcome guest.");
+    print("");
+  }
+
+  state.cwd = [];
+  updatePrompt();
+}
+
+export function cmdOpenEditor(path) {
+  openEditor(path);
+}
+
+export function cmdHelp() {
+  print("");
+  print("NEXTOS TERMINAL - Quick Reference");
+  print("");
+  print("Directories:     ls, cd,  mkdir, rmdir, rm [-r]");
+  print("Files:           mklink, rmlink, mv, cp, rm");
+  print("System:          clear, reset, time, version");
+  print("User:            login, logout");
+  print("Other:           vi, theme, help");
+  print("");
+  print("Use '<command> --help' for detailed info");
+  print("Example: ls --help, cd --help, rm --help");
   print("");
 }
 

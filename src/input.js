@@ -22,13 +22,13 @@ import {
   cmdPrintDateTime,
   cmdPrintVersion,
   cmdLogin,
+  cmdOpenEditor,
   cmdRunApp,
   handleConfirm,
 } from "./commands.js";
 
 import { cmdTheme } from "./theme.js";
 import { showHelp, hasHelpFlag } from "./help.js";
-import { openEditor } from "./editor.js";
 
 /* ===========================
    DISPATCH
@@ -117,7 +117,7 @@ function runCommand(cmd, args) {
 
     case "vi":
     case "vim":
-      openEditor(args[0]);
+      cmdOpenEditor(args[0]);
       break;
 
     default:
