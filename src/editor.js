@@ -16,6 +16,7 @@ let editorStatusBar = null;
 let commandBuffer = "";
 let normalBuffer = "";
 let editorDir = null;
+let isNumberOfLineVisible = true;
 
 export function openEditor(path) {
   editorCursorCol = 0;
@@ -107,7 +108,9 @@ function createEditorUI() {
     font-family: "Courier New", Courier, monospace;
     margin: 0;
     overflow-y: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   `;
 
   // Status bar
@@ -153,10 +156,15 @@ function updateEditorDisplay() {
 
     const cursor = isCursorLine ? ">" : " ";
 
-    display += `${cursor}${lineNumber} | ${renderedLine}\n`;
+    if (isNumberOfLineVisible) {
+      display += `${cursor}${lineNumber} | ${renderedLine}\n`;
+    } else {
+      display += `${renderedLine}\n`;
+    }
   });
 
   editorDisplay.textContent = display;
+  editorDisplay.scrollTop = editorDisplay.scrollHeight;
   updateStatusBar();
 }
 
@@ -292,6 +300,12 @@ function handleNormalMode(e) {
       commandBuffer = "";
       updateStatusBar();
       return;
+
+    case "n": {
+      isNumberOfLineVisible = !isNumberOfLineVisible;
+      updateEditorDisplay();
+      return;
+    }
 
     case "a":
       editorCursorCol = editorContent[editorCursorLine].length;
