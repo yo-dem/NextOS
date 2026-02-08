@@ -2,7 +2,7 @@
   "name": "/",
   "type": "dir",
   "children": {
-    "home": {
+    "apps": {
       "type": "dir",
       "children": {
         "sysMonitor": {
