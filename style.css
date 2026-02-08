@@ -53,7 +53,7 @@ body {
   display: flex;
   flex-direction: column;
 
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   user-select: none;
 }

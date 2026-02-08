@@ -164,8 +164,28 @@ function updateEditorDisplay() {
   });
 
   editorDisplay.textContent = display;
-  editorDisplay.scrollTop = editorDisplay.scrollHeight;
+  scrollToCursor();
   updateStatusBar();
+}
+
+function scrollToCursor() {
+  const lines = editorDisplay.textContent.split("\n");
+
+  // Altezza approssimativa riga
+  const lineHeight = 18;
+
+  const visibleHeight = editorDisplay.clientHeight;
+  const scrollTop = editorDisplay.scrollTop;
+
+  const cursorY = editorCursorLine * lineHeight;
+
+  if (cursorY < scrollTop) {
+    editorDisplay.scrollTop = cursorY;
+  }
+
+  if (cursorY > scrollTop + visibleHeight - lineHeight * 2) {
+    editorDisplay.scrollTop = cursorY - visibleHeight + lineHeight * 3;
+  }
 }
 
 function updateStatusBar() {
