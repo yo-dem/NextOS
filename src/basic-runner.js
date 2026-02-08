@@ -91,13 +91,17 @@ class BasicInterpreter {
       case "PRINT": {
         const expr = code.substring(5).trim();
 
-        // Supporta separazione con virgole
+        // Dividi per virgole, come in BASIC
         const parts = expr.split(/\s*,\s*/);
+
         const values = parts.map((p) => {
+          // Se è stringa tra virgolette
+          if (/^".*"$/.test(p)) return p.slice(1, -1);
+          // Altrimenti valuta l'espressione o variabile
           return this.evaluate(p);
         });
 
-        // Stampa concatenando senza aggiungere righe vuote extra
+        // Stampa concatenando con spazi
         outputFn(values.join(" "));
         break;
       }
