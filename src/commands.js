@@ -68,7 +68,12 @@ export function cmdLs() {
 }
 
 export function cmdCd(path) {
-  if (!path) return;
+  if (!path) {
+    print("cd: missing directory name");
+    print("Usage: cd <directory>");
+    print("");
+    return;
+  }
 
   const newPath = normalizePath(state.cwd, path);
 
@@ -81,6 +86,98 @@ export function cmdCd(path) {
 
   state.cwd = newPath;
   updatePrompt();
+}
+
+export function cmdCp(args) {
+  if (!args || args.length < 2) {
+    print("cp: missing operand");
+    print("Usage: cp [-r] SOURCE DEST");
+    print("");
+    return;
+  }
+
+  let recursive = false;
+  let sourcePathStr, destPathStr;
+
+  if (args[0] === "-r") {
+    recursive = true;
+    sourcePathStr = args[1];
+    destPathStr = args[2];
+    if (!sourcePathStr || !destPathStr) {
+      print("cp: missing operand for recursive copy");
+      return;
+    }
+  } else {
+    sourcePathStr = args[0];
+    destPathStr = args[1];
+  }
+
+  const sourcePath = normalizePath(state.cwd, sourcePathStr);
+  const destPath = normalizePath(state.cwd, destPathStr);
+
+  const sourceNode = getNode(sourcePath);
+  if (!sourceNode) {
+    print(`cp: '${sourcePathStr}': No such file or directory`);
+    return;
+  }
+
+  const sourceName = sourcePath[sourcePath.length - 1];
+  const sourceParent = getNode(sourcePath.slice(0, -1));
+
+  const destNode = getNode(destPath);
+  let destParent, destName;
+
+  if (destNode && destNode.type === "dir") {
+    // Copia dentro la directory
+    destParent = destNode;
+    destName = sourceName;
+  } else {
+    // Copia con nuovo nome
+    destParent = getNode(destPath.slice(0, -1));
+    destName = destPath[destPath.length - 1];
+  }
+
+  if (!destParent || !destParent.children) {
+    print(`cp: destination path invalid: '${destPathStr}'`);
+    return;
+  }
+
+  // Controllo per directory senza -r
+  if (sourceNode.type === "dir" && !recursive) {
+    print(`cp: -r not specified; omitting directory '${sourcePathStr}'`);
+    return;
+  }
+
+  // Evita copia di directory dentro se stessa
+  if (sourceNode.type === "dir") {
+    const sourceFull = "/" + sourcePath.join("/");
+    const destFull = "/" + [...destPath, sourceName].join("/");
+    if (destFull.startsWith(sourceFull + "/")) {
+      print(`cp: cannot copy '${sourcePathStr}' into a subdirectory of itself`);
+      return;
+    }
+  }
+
+  // Funzione di copia profonda
+  function deepCopy(node) {
+    if (node.type === "txt") {
+      return { ...node }; // copia superficiale va bene
+    } else if (node.type === "dir") {
+      const newDir = { type: "dir", children: {} };
+      for (const [k, v] of Object.entries(node.children)) {
+        newDir.children[k] = deepCopy(v);
+      }
+      return newDir;
+    } else if (node.type === "lnk") {
+      return { ...node };
+    }
+  }
+
+  destParent.children[destName] = deepCopy(sourceNode);
+
+  saveFS();
+  print(`Copied '${sourcePathStr}' -> '${destPathStr}'`);
+  print("");
 }
 
 export function cmdMkdir(dirName) {

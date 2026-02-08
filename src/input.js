@@ -14,6 +14,7 @@ import {
   cmdRmLink,
   cmdRm,
   cmdMv,
+  cmdCp,
   cmdHelp,
   cmdClear,
   cmdLogout,
@@ -84,6 +85,10 @@ function runCommand(cmd, args) {
 
     case "mv":
       cmdMv(args);
+      break;
+
+    case "cp":
+      cmdCp(args);
       break;
 
     case "reset":
