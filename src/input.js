@@ -4,6 +4,7 @@ import { dom } from "./dom.js";
 import { state } from "./state.js";
 
 import { updateCaret, printPrompt } from "./prompt.js";
+import { startBasic } from "./basic.js";
 
 import {
   cmdLs,
@@ -120,6 +121,10 @@ function runCommand(cmd, args) {
       cmdOpenEditor(args[0]);
       break;
 
+    case "basic":
+      startBasic();
+      break;
+
     default:
       cmdRunApp(cmd);
   }
@@ -135,19 +140,32 @@ export function executeCommand() {
   saveHistory(raw);
   clearInput();
 
-  printPrompt(raw);
-
   const { cmd, args } = parseCommand(raw);
+
+  // if (state.basicActive) {
+  //   handleBasicInput(raw);
+  //   return;
+  // }
 
   if (state.waitingConfirm) {
     handleConfirm(cmd);
     return;
   }
+
   if (hasHelpFlag(args)) {
     showHelp(cmd);
     return;
   }
-  if (raw) runCommand(cmd, args);
+
+  if (state.basicActive) {
+    handleBasicInput(cmd);
+    return;
+  }
+
+  if (raw) {
+    printPrompt(raw);
+    runCommand(cmd, args);
+  }
 }
 
 function saveHistory(cmd) {

@@ -7,6 +7,7 @@ import { updatePrompt, updateCaret } from "./prompt.js";
 import { clearTerminal, print } from "./terminal.js";
 import { applyTheme } from "./theme.js";
 import { openEditor } from "./editor.js";
+import { startBasic } from "./basic.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
