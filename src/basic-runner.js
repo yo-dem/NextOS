@@ -291,11 +291,6 @@ export function handleBasicInput(value) {
   return false;
 }
 
-/**
- * Run BASIC program from terminal
- */
-// src/basic-runner.js
-
 export async function runBasicFile(filepath) {
   const fullPath = normalizePath(state.cwd, filepath);
   const node = getNode(fullPath);
