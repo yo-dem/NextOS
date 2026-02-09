@@ -90,18 +90,7 @@ class BasicInterpreter {
     switch (cmd) {
       case "PRINT": {
         const expr = code.substring(5).trim();
-
-        const parts = splitPrintArgs(expr);
-
-        const values = parts.map((p) => {
-          // Se è stringa tra virgolette
-          if (/^".*"$/.test(p)) return p.slice(1, -1);
-          // Altrimenti valuta l'espressione o variabile
-          return this.evaluate(p);
-        });
-
-        // Stampa concatenando con spazi
-        outputFn(values.join(" "));
+        execPrint(expr, outputFn, this);
         break;
       }
 
@@ -265,6 +254,27 @@ class BasicInterpreter {
     }
   }
 
+  evalPrintPart(expr) {
+    expr = expr.trim();
+
+    if (/^".*"$/.test(expr)) return expr.slice(1, -1);
+
+    if (/^[A-Z]\w*$/i.test(expr)) {
+      const v = this.variables[expr.toUpperCase()];
+      return v ?? "";
+    }
+
+    if (expr.includes('"')) {
+      return expr.replace(/"([^"]*)"|([A-Z]\w*)/gi, (_, str, v) => {
+        if (str !== undefined) return str;
+        const val = this.variables[v.toUpperCase()];
+        return val ?? "";
+      });
+    }
+
+    return this.evaluate(expr);
+  }
+
   stop() {
     this.running = false;
   }
@@ -362,32 +372,65 @@ export function requestBreak() {
   }
 }
 
-function splitPrintArgs(str) {
-  const parts = [];
+function execPrint(str, outputFn, interpreter) {
+  const parts = parsePrintArgs(str);
+  let out = "";
+  let lastSep = null;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+
+    let val = evalPrintPart(part.value, interpreter);
+
+    // aggiunge spazio solo se separatore è ','
+    if (i > 0) {
+      if (lastSep === ",") out += " ";
+      // se lastSep === ';' o null → niente spazio
+    }
+
+    out += val;
+    lastSep = part.sep;
+  }
+
+  outputFn(out);
+}
+
+function parsePrintArgs(str) {
+  const tokens = [];
   let current = "";
   let inString = false;
 
-  for (let i = 0; i < str.length; i++) {
-    const ch = str[i];
+  for (let c of str) {
+    if (c === '"') inString = !inString;
 
-    if (ch === '"') {
-      inString = !inString;
-      current += ch;
-      continue;
-    }
-
-    if (ch === "," && !inString) {
-      parts.push(current.trim());
+    if (!inString && (c === "," || c === ";")) {
+      tokens.push({ value: current.trim(), sep: c });
       current = "";
-      continue;
+    } else {
+      current += c;
     }
-
-    current += ch;
   }
 
-  if (current.trim() !== "") {
-    parts.push(current.trim());
+  if (current.trim()) tokens.push({ value: current.trim(), sep: null });
+
+  return tokens;
+}
+
+function evalPrintPart(expr, interpreter) {
+  expr = expr.trim();
+
+  // stringa letterale
+  if (/^".*"$/.test(expr)) return expr.slice(1, -1);
+
+  // variabile semplice
+  if (/^[A-Z]\w*$/i.test(expr)) {
+    return interpreter.variables[expr.toUpperCase()] ?? "";
   }
 
-  return parts;
+  // espressione con stringhe e variabili (es: "Ciao " A)
+  return expr.replace(/"([^"]*)"|([A-Z]\w*)/gi, (_, str, v) => {
+    if (str !== undefined) return str;
+    if (v !== undefined) return interpreter.variables[v.toUpperCase()] ?? "";
+    return "";
+  });
 }
