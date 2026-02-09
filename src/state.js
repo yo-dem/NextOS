@@ -1,7 +1,7 @@
 // src/state.js
 
 export const VERSION_NUMBER = "v1.1.7";
-export const VERSION = "NextOS Terminal [" + VERSION_NUMBER + "] - 1984-2026 -";
+export const VERSION = "NextOS Terminal [" + VERSION_NUMBER + "] NextBasic 0.7 - 1984-2026 -";
 
 export const state = {
   currentUser: localStorage.getItem("currentUser")
