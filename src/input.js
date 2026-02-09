@@ -123,11 +123,9 @@ function runCommand(cmd, args) {
       break;
 
     case "run":
-      dom.promptPath.textContent = ">:";
+      dom.promptPath.textContent = "";
       updateCaret();
       cmdRun(args);
-      //dom.input.style.display = "none";
-
       break;
 
     default:
@@ -145,6 +143,7 @@ export function executeCommand() {
   if (state.waitingBasicInput) {
     const handled = handleBasicInput(raw);
     if (handled) {
+      printPrompt(raw);
       dom.input.value = "";
       updateCaret();
       return;
