@@ -132,6 +132,11 @@ export function handlePasswordMask() {
 export function handleTab(e) {
   if (e.key !== "Tab") return;
 
+  if (dom.input.disabled) {
+    e.preventDefault();
+    return;
+  }
+
   e.preventDefault();
 
   const input = dom.input.value;

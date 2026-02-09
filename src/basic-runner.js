@@ -281,26 +281,6 @@ class BasicInterpreter {
 }
 
 /**
- * Get Input from User (Terminal version)
- */
-function getInput(prompt) {
-  return new Promise((resolve) => {
-    // Save terminal state
-    state.waitingBasicInput = true;
-
-    // Print prompt
-    if (prompt) print(prompt);
-
-    // Setup callback
-    runnerInputCallback = (value) => {
-      state.waitingBasicInput = false;
-      runnerInputCallback = null;
-      resolve(value);
-    };
-  });
-}
-
-/**
  * Handle input when BASIC is waiting
  */
 export function handleBasicInput(value) {
@@ -314,6 +294,8 @@ export function handleBasicInput(value) {
 /**
  * Run BASIC program from terminal
  */
+// src/basic-runner.js
+
 export async function runBasicFile(filepath) {
   const fullPath = normalizePath(state.cwd, filepath);
   const node = getNode(fullPath);
@@ -333,6 +315,10 @@ export async function runBasicFile(filepath) {
   print(`Running ${filepath}...`);
   print("");
 
+  // Disabilita l'input mentre il programma gira
+  dom.input.disabled = true;
+  dom.input.style.opacity = "0.5";
+
   // Load program
   const lines = node.content.split("\n");
 
@@ -345,10 +331,48 @@ export async function runBasicFile(filepath) {
   print("");
   print("Program ended.");
   print("");
-  updatePrompt();
-  dom.input.style.display = "block";
+
+  // Riabilita l'input quando il programma finisce
+  dom.input.disabled = false;
+  dom.input.style.opacity = "1";
   dom.input.focus();
+
+  updatePrompt();
   runnerInterpreter = null;
+}
+
+/**
+ * Get Input from User (Terminal version)
+ */
+function getInput(prompt) {
+  return new Promise((resolve) => {
+    // Print prompt
+    if (prompt) print(prompt);
+
+    // Riabilita l'input per INPUT statement
+    dom.input.disabled = false;
+    dom.input.style.opacity = "1";
+
+    // Focus sull'input dopo un breve delay
+    setTimeout(() => {
+      dom.input.focus();
+    }, 50);
+
+    // Save terminal state
+    state.waitingBasicInput = true;
+
+    // Setup callback
+    runnerInputCallback = (value) => {
+      state.waitingBasicInput = false;
+      runnerInputCallback = null;
+
+      // Disabilita di nuovo l'input dopo aver ricevuto il valore
+      dom.input.disabled = true;
+      dom.input.style.opacity = "0.5";
+
+      resolve(value);
+    };
+  });
 }
 
 /**
@@ -360,6 +384,11 @@ export function stopBasicProgram() {
     print("");
     print("[Program stopped]");
     print("");
+
+    // Riabilita l'input
+    dom.input.disabled = false;
+    dom.input.style.opacity = "1";
+    dom.input.focus();
   }
 }
 
@@ -369,6 +398,13 @@ export function stopBasicProgram() {
 export function requestBreak() {
   if (runnerInterpreter) {
     runnerInterpreter.breakRequested = true;
+
+    // Riabilita l'input dopo il break
+    setTimeout(() => {
+      dom.input.disabled = false;
+      dom.input.style.opacity = "1";
+      dom.input.focus();
+    }, 100);
   }
 }
 
