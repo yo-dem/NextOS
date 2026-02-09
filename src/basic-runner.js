@@ -91,8 +91,7 @@ class BasicInterpreter {
       case "PRINT": {
         const expr = code.substring(5).trim();
 
-        // Dividi per virgole, come in BASIC
-        const parts = expr.split(/\s*,\s*/);
+        const parts = splitPrintArgs(expr);
 
         const values = parts.map((p) => {
           // Se è stringa tra virgolette
@@ -361,4 +360,34 @@ export function requestBreak() {
   if (runnerInterpreter) {
     runnerInterpreter.breakRequested = true;
   }
+}
+
+function splitPrintArgs(str) {
+  const parts = [];
+  let current = "";
+  let inString = false;
+
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+
+    if (ch === '"') {
+      inString = !inString;
+      current += ch;
+      continue;
+    }
+
+    if (ch === "," && !inString) {
+      parts.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += ch;
+  }
+
+  if (current.trim() !== "") {
+    parts.push(current.trim());
+  }
+
+  return parts;
 }
