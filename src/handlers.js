@@ -143,12 +143,59 @@ export function handleTab(e) {
   const spacer = base ? " " : "";
 
   if (result.matches.length === 1) {
-    dom.input.value = base + spacer + result.basePath + result.matches[0];
+    // Un solo match: completa tutto
+    let completePath = result.basePath + result.matches[0];
+
+    // Se è una directory, aggiungi / alla fine
+    if (result.isDirectory && result.isDirectory[0]) {
+      completePath += "/";
+    }
+
+    if (!base) {
+      dom.input.value = completePath;
+    } else {
+      dom.input.value = base + spacer + completePath;
+    }
   } else {
-    print(result.matches.join("  "));
+    // Multipli match: trova il prefisso comune
+    const commonPrefix = findCommonPrefix(result.matches);
+
+    // Estrai il nome corrente (ultima parte dopo /)
+    const inputParts = input.split(/\s+/);
+    const lastPart = inputParts[inputParts.length - 1] || "";
+    const currentName = lastPart.split("/").pop();
+
+    if (commonPrefix.length > currentName.length) {
+      const completePath = result.basePath + commonPrefix;
+      if (!base) {
+        dom.input.value = completePath;
+      } else {
+        dom.input.value = base + spacer + completePath;
+      }
+    } else {
+      // Mostra i match senza il basePath (solo i nomi)
+      print(result.matches.join("  "));
+    }
   }
 
   updateCaret();
+}
+
+// Funzione helper per trovare il prefisso comune
+function findCommonPrefix(strings) {
+  if (!strings.length) return "";
+  if (strings.length === 1) return strings[0];
+
+  let prefix = strings[0];
+
+  for (let i = 1; i < strings.length; i++) {
+    while (!strings[i].startsWith(prefix)) {
+      prefix = prefix.slice(0, -1);
+      if (!prefix) return "";
+    }
+  }
+
+  return prefix;
 }
 
 function handleLogin(value) {
