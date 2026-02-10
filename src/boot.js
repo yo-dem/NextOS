@@ -7,20 +7,16 @@ import { state } from "./state.js";
 
 export function bootSequence() {
   const lines = [
-    "Booting NextOS kernel...",
-    " [OK]",
+    "NextOS BIOS v3.9.2",
+    "Yodema Labs 1984-2026",
     "",
-    "Loading core modules:",
-    " [OK]",
+    "Mounting virtual filesystem...",
     "",
-    "Checking devices...",
-    " [OK]",
+    "Loading GUEST",
     "",
+    "Loading kernel modules...",
     "",
-    "[INFO] Starting NextOS...",
-    "",
-    "",
-    "",
+    "[OK] Modules loaded",
   ];
 
   let i = 0;
@@ -28,9 +24,9 @@ export function bootSequence() {
   function next() {
     if (i < lines.length) {
       print(lines[i++]);
-      setTimeout(next, 200);
+      setTimeout(next, 120);
     } else {
-      setTimeout(finish, 500);
+      setTimeout(finish, 600);
     }
   }
 
@@ -46,5 +42,5 @@ export function bootSequence() {
     updatePrompt();
   }
 
-  setTimeout(next, 800);
+  setTimeout(next, 700);
 }
