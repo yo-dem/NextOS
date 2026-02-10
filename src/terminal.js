@@ -6,7 +6,9 @@ export function print(text = "") {
   const div = document.createElement("div");
   div.className = "line";
 
-  if (text.startsWith(" [INFO]")) div.style.color = "#2eb2bb";
+  if (text.startsWith(" [INFO]")) {
+    div.style.color = "var(--header-color)";
+  }
   if (text.includes("[dir]")) {
     div.classList.add("dir");
   }

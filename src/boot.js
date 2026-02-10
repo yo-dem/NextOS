@@ -6,17 +6,29 @@ import { updatePrompt } from "./prompt.js";
 import { state } from "./state.js";
 
 export function bootSequence() {
+  print("");
+  print("      ▄▀▄     ▄▀▄");
+  print("     ▄█░░▀▀▀▀▀░░█▄");
+  print(" ▄▄  █░░░░░░░░░░░█  ▄▄");
+  print("█▄▄█ █░░▀░░┬░░▀░░█ █▄▄█");
+  print("");
+
   const lines = [
-    "NextOS BIOS v3.9.2",
-    "Yodema Labs 1984-2026",
+    "Booting NextOS kernel...",
+    " [OK]",
     "",
-    "Mounting virtual filesystem...",
+    "Loading core modules:",
+    " [OK] VIRTUAL FILESYSTEM ",
+    " [OK] VI EDITOR          ",
+    " [OK] BASIC INTERPRETER  ",
     "",
-    "Loading GUEST",
+    " [INFO] Virtual filesystem mounted",
+    " [INFO] Initializing user interface...",
+    " [INFO] Starting background services...",
     "",
-    "Loading kernel modules...",
+    "Welcome to NextOS!",
     "",
-    "[OK] Modules loaded",
+    "",
   ];
 
   let i = 0;
@@ -24,13 +36,14 @@ export function bootSequence() {
   function next() {
     if (i < lines.length) {
       print(lines[i++]);
-      setTimeout(next, 120);
+      setTimeout(next, 100);
     } else {
-      setTimeout(finish, 600);
+      setTimeout(finish, 2200);
     }
   }
 
   function finish() {
+    dom.version.style.display = "none";
     clearTerminal();
 
     dom.terminal.querySelector(".prompt").classList.remove("hidden");

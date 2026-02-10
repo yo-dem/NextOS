@@ -601,13 +601,9 @@ export function cmdCp(args) {
   print("");
 }
 
-export function cmdClear(silently = false) {
-  terminal.querySelectorAll(".line").forEach((l) => l.remove());
-  if (!silently) {
-    print(new Date().toLocaleString());
-    print("SYSTEM READY");
-  }
-  print("");
+export function cmdClear() {
+  //terminal.querySelectorAll(".line").forEach((l) => l.remove());
+  clearTerminal();
 }
 
 export function cmdReset() {
@@ -628,6 +624,12 @@ export function cmdPrintDateTime() {
 }
 
 export function cmdPrintVersion() {
+  print("");
+  print("      ▄▀▄     ▄▀▄");
+  print("     ▄█░░▀▀▀▀▀░░█▄");
+  print(" ▄▄  █░░░░░░░░░░░█  ▄▄");
+  print("█▄▄█ █░░▀░░┬░░▀░░█ █▄▄█");
+  print("");
   print("" + VERSION);
   print("");
 }
@@ -753,7 +755,7 @@ export async function handleConfirm(value) {
   if (confirm.type === "reset") {
     applyTheme("dracula");
     cmdLogout(true);
-    clearTerminal(true);
+    clearTerminal();
     state.history = [];
     state.historyIndex = -1;
     localStorage.clear();
