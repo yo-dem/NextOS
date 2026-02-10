@@ -149,7 +149,7 @@ export function handleTab(e) {
 
   if (result.matches.length === 1) {
     // Un solo match: completa tutto
-    let completePath = result.basePath + result.matches[0];
+    let completePath = result.basePath + result.matches[0]; 
 
     // Se è una directory, aggiungi / alla fine
     if (result.isDirectory && result.isDirectory[0]) {

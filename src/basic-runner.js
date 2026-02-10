@@ -47,7 +47,7 @@ class BasicInterpreter {
     this.returnStack = [];
     this.forLoops = {};
     this.currentLine = 0;
-    this.breakRequested = false; // <-- nuova variabile
+    this.breakRequested = false;
 
     while (this.currentLine < this.program.length && this.running) {
       if (this.breakRequested) {
@@ -307,7 +307,7 @@ export async function runBasicFile(filepath) {
     return;
   }
 
-  print(`Running ${filepath}...`);
+  //print(`Running ${filepath}...`);
   print("");
 
   // Disabilita l'input mentre il programma gira
@@ -324,8 +324,8 @@ export async function runBasicFile(filepath) {
   await runnerInterpreter.run((text) => print(text), getInput);
 
   print("");
-  print("Program ended.");
-  print("");
+  //print("Program ended.");
+  //print("");
 
   // Riabilita l'input quando il programma finisce
   dom.input.disabled = false;

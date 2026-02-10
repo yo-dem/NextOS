@@ -33,6 +33,7 @@ body {
   color: var(--text-color);
 
   font-family: "Courier New", Courier, monospace;
+  font-size: medium;
 
   display: flex;
   justify-content: center;
@@ -44,17 +45,16 @@ body {
    ========================================================= */
 
 .terminal {
-  width: 70%;
+  width: 60%;
   max-width: 70%;
-  height: 80%;
+  height: 90%;
 
   padding: 20px;
 
   display: flex;
   flex-direction: column;
 
-  overflow-y: hidden;
-  overflow-x: hidden;
+  overflow: hidden;
   user-select: none;
 }
 

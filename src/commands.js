@@ -21,7 +21,7 @@ export function cmdLs() {
   let links = 0;
   let dirs = 0;
 
-  const W = 50;
+  const W = 20;
 
   const entries = Object.entries(node.children);
 
