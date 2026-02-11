@@ -146,7 +146,7 @@ class BasicInterpreter {
             `Invalid variable name "${varName}". Variables must start with a letter`,
           );
         }
-        const value = await inputFn(prompt);
+        const value = (await inputFn(prompt)).trim(); // TRIM whitespace!
         const num = parseFloat(value);
         this.variables[varName] = !isNaN(num) ? num : value;
         break;
@@ -182,18 +182,42 @@ class BasicInterpreter {
             `Invalid IF syntax. Use: IF condition THEN statement`,
           );
         }
+        console.log("IF statement - condition part:", match[1]);
+        console.log("IF statement - then part:", match[2]);
         const cond = this.evaluateCondition(match[1]);
+        console.log("IF condition result:", cond);
         if (cond) {
           const thenPart = match[2].trim();
+          console.log("Executing THEN part:", thenPart);
+
+          // Check if it's just a line number
           if (/^\d+$/.test(thenPart)) {
-            return parseInt(thenPart);
-          } else {
-            await this.executeLine(
-              { num: line.num, code: thenPart },
-              outputFn,
-              inputFn,
+            console.log(
+              "THEN part is line number, returning:",
+              parseInt(thenPart),
             );
+            return parseInt(thenPart);
           }
+
+          // Check if it's GOTO <number>
+          const gotoMatch = thenPart.match(/^GOTO\s+(\d+)$/i);
+          if (gotoMatch) {
+            console.log(
+              "THEN part is GOTO, returning:",
+              parseInt(gotoMatch[1]),
+            );
+            return parseInt(gotoMatch[1]);
+          }
+
+          // Otherwise execute as statement
+          console.log("THEN part is statement, executing");
+          await this.executeLine(
+            { num: line.num, code: thenPart },
+            outputFn,
+            inputFn,
+          );
+        } else {
+          console.log("IF condition was false, skipping THEN part");
         }
         break;
       }
@@ -328,19 +352,75 @@ class BasicInterpreter {
   }
 
   evaluateCondition(cond) {
-    // Sostituisce = con == ma non <= o >=
-    cond = cond.replace(/([^<>!])=([^=])/g, "$1==$2");
+    console.log("=== EVALUATING CONDITION ===");
+    console.log("Original condition:", JSON.stringify(cond));
 
+    cond = cond.trim();
+    console.log("After trim:", JSON.stringify(cond));
+
+    // Rimuovi parentesi esterne se presenti
+    if (cond.startsWith("(") && cond.endsWith(")")) {
+      cond = cond.slice(1, -1).trim();
+      console.log("After removing parentheses:", JSON.stringify(cond));
+    }
+
+    console.log("Variables:", this.variables);
+
+    // Prima sostituisci le variabili con i loro valori
     for (const [name, val] of Object.entries(this.variables)) {
       const regex = new RegExp(`\\b${name}\\b`, "g");
       const valStr = typeof val === "string" ? `"${val}"` : val;
+      console.log(`Replacing ${name} with ${valStr} (type: ${typeof val})`);
       cond = cond.replace(regex, valStr);
+      console.log("After replacement:", JSON.stringify(cond));
     }
 
+    // Poi sostituisci = con === SOLO fuori dalle stringhe
+    let result = "";
+    let inString = false;
+    let i = 0;
+
+    while (i < cond.length) {
+      const char = cond[i];
+
+      if (char === '"') {
+        inString = !inString;
+        result += char;
+        i++;
+      } else if (
+        !inString &&
+        char === "=" &&
+        cond[i - 1] !== "<" &&
+        cond[i - 1] !== ">" &&
+        cond[i - 1] !== "!" &&
+        cond[i + 1] !== "="
+      ) {
+        result += "===";
+        i++;
+      } else {
+        result += char;
+        i++;
+      }
+    }
+
+    console.log("Final JS code:", JSON.stringify(result));
+
     try {
-      return new Function(`return ${cond}`)();
+      const evalResult = new Function(`return ${result}`)();
+      console.log(
+        "Evaluation result:",
+        evalResult,
+        "(type:",
+        typeof evalResult,
+        ")",
+      );
+      console.log("=== END CONDITION ===\n");
+      return evalResult;
     } catch (err) {
-      throw new Error(`Cannot evaluate condition: ${cond}`);
+      console.error("Evaluation error:", err);
+      throw new Error(
+        `Cannot evaluate condition: ${cond} (evaluated as: ${result})`,
+      );
     }
   }
 
