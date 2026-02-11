@@ -5,6 +5,7 @@ import { state } from "./state.js";
 
 import { updateCaret, printPrompt } from "./prompt.js";
 import { handleBasicInput } from "./basic-runner.js";
+import { openNano } from "./nano-editor.js";
 
 import {
   cmdLs,
@@ -121,6 +122,11 @@ function runCommand(cmd, args) {
     case "vim":
       cmdOpenEditor(args[0]);
       break;
+
+    case "nano": {
+      openNano(args[0]);
+      break;
+    }
 
     case "run":
       dom.promptPath.textContent = "";

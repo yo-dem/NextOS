@@ -35,7 +35,23 @@ class BasicInterpreter {
           num: parseInt(match[1]),
           code: match[2].trim(),
         });
+      } else if (trimmed && !/^\d+$/.test(trimmed)) {
+        // Riga senza numero di linea valido (ignorando linee che sono solo numeri)
+        throw new Error(
+          `Invalid line format: "${trimmed}" - lines must start with a line number`,
+        );
       }
+    }
+
+    // Verifica duplicati
+    const lineNumbers = this.program.map((l) => l.num);
+    const duplicates = lineNumbers.filter(
+      (num, idx) => lineNumbers.indexOf(num) !== idx,
+    );
+    if (duplicates.length > 0) {
+      throw new Error(
+        `Duplicate line number(s): ${[...new Set(duplicates)].join(", ")}`,
+      );
     }
 
     this.program.sort((a, b) => a.num - b.num);
@@ -69,12 +85,14 @@ class BasicInterpreter {
           if (idx !== -1) {
             this.currentLine = idx;
             continue;
+          } else {
+            throw new Error(`GOTO/GOSUB target line ${result} does not exist`);
           }
         }
 
         this.currentLine++;
       } catch (err) {
-        outputFn(`Error at line ${line.num}: ${err.message}`, "error");
+        outputFn(`Error at line ${line.num}: ${err.message}`);
         break;
       }
     }
@@ -90,37 +108,61 @@ class BasicInterpreter {
     switch (cmd) {
       case "PRINT": {
         const expr = code.substring(5).trim();
-        execPrint(expr, outputFn, this);
+        if (!expr) {
+          outputFn(""); // PRINT senza argomenti stampa riga vuota
+        } else {
+          execPrint(expr, outputFn, this);
+        }
         break;
       }
 
       case "LET": {
         const match = code.match(/LET\s+(\w+)\s*=\s*(.+)/i);
-        if (match) {
-          const varName = match[1].toUpperCase();
-          const value = this.evaluate(match[2]);
-          this.variables[varName] = value;
+        if (!match) {
+          throw new Error(`Invalid LET syntax. Use: LET variable = expression`);
         }
+        const varName = match[1].toUpperCase();
+        if (!/^[A-Z][A-Z0-9]*$/i.test(varName)) {
+          throw new Error(
+            `Invalid variable name "${varName}". Variables must start with a letter`,
+          );
+        }
+        const value = this.evaluate(match[2]);
+        this.variables[varName] = value;
         break;
       }
 
       case "INPUT": {
         const match = code.match(/INPUT\s+(?:"([^"]+)";\s*)?(\w+)/i);
-        if (match) {
-          const prompt = match[1] || "";
-          const varName = match[2].toUpperCase();
-          const value = await inputFn(prompt);
-          const num = parseFloat(value);
-          this.variables[varName] = !isNaN(num) ? num : value;
+        if (!match) {
+          throw new Error(
+            `Invalid INPUT syntax. Use: INPUT variable or INPUT "prompt"; variable`,
+          );
         }
+        const prompt = match[1] || "";
+        const varName = match[2].toUpperCase();
+        if (!/^[A-Z][A-Z0-9]*$/i.test(varName)) {
+          throw new Error(
+            `Invalid variable name "${varName}". Variables must start with a letter`,
+          );
+        }
+        const value = await inputFn(prompt);
+        const num = parseFloat(value);
+        this.variables[varName] = !isNaN(num) ? num : value;
         break;
       }
 
       case "GOTO": {
+        if (!tokens[1] || !/^\d+$/.test(tokens[1])) {
+          throw new Error(`Invalid GOTO syntax. Use: GOTO line_number`);
+        }
         return parseInt(tokens[1]);
       }
 
       case "GOSUB": {
+        if (!tokens[1] || !/^\d+$/.test(tokens[1])) {
+          throw new Error(`Invalid GOSUB syntax. Use: GOSUB line_number`);
+        }
         this.returnStack.push(this.currentLine);
         return parseInt(tokens[1]);
       }
@@ -135,19 +177,22 @@ class BasicInterpreter {
 
       case "IF": {
         const match = code.match(/IF\s+(.+?)\s+THEN\s+(.+)/i);
-        if (match) {
-          const cond = this.evaluateCondition(match[1]);
-          if (cond) {
-            const thenPart = match[2].trim();
-            if (/^\d+$/.test(thenPart)) {
-              return parseInt(thenPart);
-            } else {
-              await this.executeLine(
-                { num: line.num, code: thenPart },
-                outputFn,
-                inputFn,
-              );
-            }
+        if (!match) {
+          throw new Error(
+            `Invalid IF syntax. Use: IF condition THEN statement`,
+          );
+        }
+        const cond = this.evaluateCondition(match[1]);
+        if (cond) {
+          const thenPart = match[2].trim();
+          if (/^\d+$/.test(thenPart)) {
+            return parseInt(thenPart);
+          } else {
+            await this.executeLine(
+              { num: line.num, code: thenPart },
+              outputFn,
+              inputFn,
+            );
           }
         }
         break;
@@ -157,35 +202,62 @@ class BasicInterpreter {
         const match = code.match(
           /FOR\s+(\w+)\s*=\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i,
         );
-        if (match) {
-          const varName = match[1].toUpperCase();
-          const start = this.evaluate(match[2]);
-          const end = this.evaluate(match[3]);
-          const step = match[4] ? this.evaluate(match[4]) : 1;
-
-          this.variables[varName] = start;
-          this.forLoops[varName] = {
-            end,
-            step,
-            line: this.currentLine,
-          };
+        if (!match) {
+          throw new Error(
+            `Invalid FOR syntax. Use: FOR variable = start TO end [STEP increment]`,
+          );
         }
+        const varName = match[1].toUpperCase();
+        if (!/^[A-Z][A-Z0-9]*$/i.test(varName)) {
+          throw new Error(
+            `Invalid variable name "${varName}". Variables must start with a letter`,
+          );
+        }
+        const start = this.evaluate(match[2]);
+        const end = this.evaluate(match[3]);
+        const step = match[4] ? this.evaluate(match[4]) : 1;
+
+        if (
+          typeof start !== "number" ||
+          typeof end !== "number" ||
+          typeof step !== "number"
+        ) {
+          throw new Error(`FOR loop requires numeric values`);
+        }
+
+        if (step === 0) {
+          throw new Error(`FOR loop STEP cannot be zero`);
+        }
+
+        this.variables[varName] = start;
+        this.forLoops[varName] = {
+          end,
+          step,
+          line: this.currentLine,
+        };
         break;
       }
 
       case "NEXT": {
+        if (!tokens[1]) {
+          throw new Error(`Invalid NEXT syntax. Use: NEXT variable`);
+        }
         const varName = tokens[1].toUpperCase();
         const loop = this.forLoops[varName];
-        if (loop) {
-          this.variables[varName] += loop.step;
-          const current = this.variables[varName];
+        if (!loop) {
+          throw new Error(`NEXT ${varName} without matching FOR`);
+        }
+        this.variables[varName] += loop.step;
+        const current = this.variables[varName];
 
-          if (
-            (loop.step > 0 && current <= loop.end) ||
-            (loop.step < 0 && current >= loop.end)
-          ) {
-            this.currentLine = loop.line;
-          }
+        if (
+          (loop.step > 0 && current <= loop.end) ||
+          (loop.step < 0 && current >= loop.end)
+        ) {
+          this.currentLine = loop.line;
+        } else {
+          // Pulisce il loop quando finisce
+          delete this.forLoops[varName];
         }
         break;
       }
@@ -199,13 +271,25 @@ class BasicInterpreter {
       }
 
       default: {
+        // Assegnamento implicito (senza LET)
         if (code.includes("=")) {
           const match = code.match(/(\w+)\s*=\s*(.+)/);
           if (match) {
             const varName = match[1].toUpperCase();
+            if (!/^[A-Z][A-Z0-9]*$/i.test(varName)) {
+              throw new Error(
+                `Invalid variable name "${varName}". Variables must start with a letter`,
+              );
+            }
             const value = this.evaluate(match[2]);
             this.variables[varName] = value;
+          } else {
+            throw new Error(`Invalid assignment syntax`);
           }
+        } else {
+          throw new Error(
+            `Unknown command: ${cmd}. Valid commands: PRINT, LET, INPUT, GOTO, GOSUB, RETURN, IF, FOR, NEXT, END, REM`,
+          );
         }
       }
     }
@@ -226,20 +310,26 @@ class BasicInterpreter {
       let evalExpr = expr.replace(/\b[A-Z]\w*\b/gi, (match) => {
         const varName = match.toUpperCase();
         const val = this.variables[varName];
-        if (val === undefined) return 0;
+        if (val === undefined) {
+          throw new Error(`Undefined variable: ${varName}`);
+        }
         if (typeof val === "string") return `"${val}"`;
         return val;
       });
 
       const result = new Function(`return ${evalExpr}`)();
       return result;
-    } catch {
-      return 0;
+    } catch (err) {
+      if (err.message.includes("Undefined variable")) {
+        throw err;
+      }
+      throw new Error(`Cannot evaluate expression: ${expr}`);
     }
   }
 
   evaluateCondition(cond) {
-    cond = cond.replace(/=/g, "==");
+    // Sostituisce = con == ma non <= o >=
+    cond = cond.replace(/([^<>!])=([^=])/g, "$1==$2");
 
     for (const [name, val] of Object.entries(this.variables)) {
       const regex = new RegExp(`\\b${name}\\b`, "g");
@@ -249,30 +339,9 @@ class BasicInterpreter {
 
     try {
       return new Function(`return ${cond}`)();
-    } catch {
-      return false;
+    } catch (err) {
+      throw new Error(`Cannot evaluate condition: ${cond}`);
     }
-  }
-
-  evalPrintPart(expr) {
-    expr = expr.trim();
-
-    if (/^".*"$/.test(expr)) return expr.slice(1, -1);
-
-    if (/^[A-Z]\w*$/i.test(expr)) {
-      const v = this.variables[expr.toUpperCase()];
-      return v ?? "";
-    }
-
-    if (expr.includes('"')) {
-      return expr.replace(/"([^"]*)"|([A-Z]\w*)/gi, (_, str, v) => {
-        if (str !== undefined) return str;
-        const val = this.variables[v.toUpperCase()];
-        return val ?? "";
-      });
-    }
-
-    return this.evaluate(expr);
   }
 
   stop() {
@@ -307,33 +376,35 @@ export async function runBasicFile(filepath) {
     return;
   }
 
-  //print(`Running ${filepath}...`);
   print("");
 
   // Disabilita l'input mentre il programma gira
   dom.input.disabled = true;
   dom.input.style.opacity = "0.5";
 
-  // Load program
-  const lines = node.content.split("\n");
+  try {
+    // Load program
+    const lines = node.content.split("\n");
 
-  runnerInterpreter = new BasicInterpreter();
-  runnerInterpreter.load(lines);
+    runnerInterpreter = new BasicInterpreter();
+    runnerInterpreter.load(lines);
 
-  // Run with output to terminal
-  await runnerInterpreter.run((text) => print(text), getInput);
+    // Run with output to terminal
+    await runnerInterpreter.run((text) => print(text), getInput);
 
-  print("");
-  //print("Program ended.");
-  //print("");
+    print("");
+  } catch (err) {
+    print(`Program error: ${err.message}`);
+    print("");
+  } finally {
+    // Riabilita l'input quando il programma finisce
+    dom.input.disabled = false;
+    dom.input.style.opacity = "1";
+    dom.input.focus();
 
-  // Riabilita l'input quando il programma finisce
-  dom.input.disabled = false;
-  dom.input.style.opacity = "1";
-  dom.input.focus();
-
-  updatePrompt();
-  runnerInterpreter = null;
+    updatePrompt();
+    runnerInterpreter = null;
+  }
 }
 
 /**
@@ -435,7 +506,9 @@ function parsePrintArgs(str) {
     if (c === '"') inString = !inString;
 
     if (!inString && (c === "," || c === ";")) {
-      tokens.push({ value: current.trim(), sep: c });
+      if (current.trim()) {
+        tokens.push({ value: current.trim(), sep: c });
+      }
       current = "";
     } else {
       current += c;
@@ -450,18 +523,39 @@ function parsePrintArgs(str) {
 function evalPrintPart(expr, interpreter) {
   expr = expr.trim();
 
-  // stringa letterale
+  // stringa letterale pura
   if (/^".*"$/.test(expr)) return expr.slice(1, -1);
 
-  // variabile semplice
+  // variabile semplice (senza operatori)
   if (/^[A-Z]\w*$/i.test(expr)) {
-    return interpreter.variables[expr.toUpperCase()] ?? "";
+    const val = interpreter.variables[expr.toUpperCase()];
+    return val !== undefined ? val : "";
   }
 
-  // espressione con stringhe e variabili (es: "Ciao " A)
-  return expr.replace(/"([^"]*)"|([A-Z]\w*)/gi, (_, str, v) => {
-    if (str !== undefined) return str;
-    if (v !== undefined) return interpreter.variables[v.toUpperCase()] ?? "";
-    return "";
-  });
+  // Se contiene stringhe letterali, gestisci come concatenazione
+  if (expr.includes('"')) {
+    return expr.replace(/"([^"]*)"|([A-Z]\w*)/gi, (_, str, v) => {
+      if (str !== undefined) return str;
+      if (v !== undefined) {
+        const val = interpreter.variables[v.toUpperCase()];
+        return val !== undefined ? val : "";
+      }
+      return "";
+    });
+  }
+
+  // Altrimenti è un'espressione matematica (A * B, tab * i, ecc.)
+  try {
+    let evalExpr = expr.replace(/\b[A-Z]\w*\b/gi, (match) => {
+      const varName = match.toUpperCase();
+      const val = interpreter.variables[varName];
+      if (val === undefined) return 0;
+      return val;
+    });
+
+    const result = new Function(`return ${evalExpr}`)();
+    return result;
+  } catch {
+    return expr; // Fallback: restituisce l'espressione originale
+  }
 }
