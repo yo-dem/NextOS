@@ -4,6 +4,7 @@ import { print, clearTerminal } from "./terminal.js";
 import { dom } from "./dom.js";
 import { updatePrompt } from "./prompt.js";
 import { state } from "./state.js";
+import { cmdPrintVersion } from "./commands.js";
 
 export function bootSequence() {
   print("");

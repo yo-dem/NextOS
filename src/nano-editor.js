@@ -8,55 +8,55 @@ import { updatePrompt } from "./prompt.js";
 
 let editorState = null;
 
-// Editor themes
+// Editor themes matching NextOS terminal themes EXACTLY
 const THEMES = {
-  green: {
-    bg: "#1a1a1a",
-    fg: "#00ff00",
-    cursor: "#00ff00",
-    cursorBg: "#000",
-    lineNum: "#666",
-    header: "#333",
-    headerText: "#fff",
-    border: "#00ff00",
-    status: "#333",
-    statusText: "#fff",
+  classic: {
+    bg: "#0f0f0f",
+    fg: "#00ff88be",
+    cursor: "#3cff01",
+    cursorBg: "#0f0f0f",
+    lineNum: "#00aa66",
+    header: "#003322",
+    headerText: "#91c7b3",
+    border: "#00aa66",
+    status: "#003322",
+    statusText: "#91c7b3",
   },
   amber: {
-    bg: "#1a1209",
+    bg: "#1a0f00",
     fg: "#ffb000",
-    cursor: "#ffb000",
-    cursorBg: "#000",
-    lineNum: "#665500",
+    cursor: "#ffd700",
+    cursorBg: "#1a0f00",
+    lineNum: "#cc8800",
     header: "#332200",
-    headerText: "#ffb000",
-    border: "#ffb000",
+    headerText: "#d4a574",
+    border: "#cc8800",
     status: "#332200",
-    statusText: "#ffb000",
+    statusText: "#d4a574",
   },
-  blue: {
-    bg: "#0a0a1a",
-    fg: "#00aaff",
-    cursor: "#00aaff",
-    cursorBg: "#000",
-    lineNum: "#004466",
-    header: "#002244",
-    headerText: "#00aaff",
-    border: "#00aaff",
-    status: "#002244",
-    statusText: "#00aaff",
+  dracula: {
+    bg: "#282a36",
+    fg: "#f6f2f8",
+    cursor: "#50fa7b",
+    cursorBg: "#282a36",
+    lineNum: "#6272a4",
+    header: "#44475a",
+    headerText: "#ffae89",
+    border: "#6272a4",
+    status: "#44475a",
+    statusText: "#ffae89",
   },
-  white: {
-    bg: "#1a1a1a",
+  terminal: {
+    bg: "#300a24",
     fg: "#ffffff",
-    cursor: "#ffffff",
-    cursorBg: "#000",
-    lineNum: "#666",
-    header: "#333",
-    headerText: "#fff",
-    border: "#666",
-    status: "#333",
-    statusText: "#fff",
+    cursor: "#00ff00",
+    cursorBg: "#300a24",
+    lineNum: "#aaaaaa",
+    header: "#1a0614",
+    headerText: "#eeeeee",
+    border: "#aaaaaa",
+    status: "#1a0614",
+    statusText: "#eeeeee",
   },
 };
 
@@ -76,7 +76,7 @@ class NanoEditor {
     this.scrollTop = 0;
     this.message = "";
     this.messageTimeout = null;
-    this.theme = state.terminalTheme || "green";
+    this.theme = localStorage.getItem("terminal_theme") || "classic";
   }
 
   getCurrentLine() {
@@ -363,7 +363,34 @@ class NanoEditor {
 
   save() {
     const content = this.lines.join("\n");
-    saveFS(this.filepath, content);
+
+    // Get the file node
+    const node = getNode(normalizePath([], this.filepath));
+
+    if (node) {
+      // Update existing file
+      node.content = content;
+      // Update size (approximate KB)
+      node.size = Math.ceil(content.length / 1024);
+    } else {
+      // Create new file
+      const pathParts = normalizePath([], this.filepath);
+      const fileName = pathParts.pop();
+      const parentPath = pathParts;
+      const parentNode = getNode(parentPath);
+
+      if (parentNode && parentNode.children) {
+        parentNode.children[fileName] = {
+          type: "txt",
+          content: content,
+          size: Math.ceil(content.length / 1024),
+        };
+      }
+    }
+
+    // Save filesystem to localStorage
+    saveFS();
+
     this.modified = false;
     this.showMessage(`Saved ${this.filepath}`);
   }
@@ -377,6 +404,13 @@ class NanoEditor {
  * Open file in nano editor
  */
 export function openNano(filepath) {
+  if (!filepath) {
+    print("nano: missing filename");
+    print("Usage: nano <filename>");
+    print("");
+    return;
+  }
+
   const fullPath = normalizePath(state.cwd, filepath);
   const node = getNode(fullPath);
 
@@ -389,7 +423,7 @@ export function openNano(filepath) {
       print("");
       return;
     }
-    content = node.content;
+    content = node.content || "";
   } else {
     isNewFile = true;
   }
@@ -399,7 +433,7 @@ export function openNano(filepath) {
   dom.input.style.display = "none";
 
   // Create editor
-  editorState = new NanoEditor(fullPath, content);
+  editorState = new NanoEditor("/" + fullPath.join("/"), content);
   state.editorMode = "nano";
 
   // Create editor UI
@@ -419,7 +453,7 @@ function createEditorUI() {
   const oldEditor = document.getElementById("nano-editor");
   if (oldEditor) oldEditor.remove();
 
-  const theme = THEMES[editorState.theme] || THEMES.green;
+  const theme = THEMES[editorState.theme] || THEMES.classic;
 
   const editorContainer = document.createElement("div");
   editorContainer.id = "nano-editor";
@@ -522,7 +556,7 @@ function createEditorUI() {
 function renderEditor() {
   if (!editorState) return;
 
-  const theme = THEMES[editorState.theme] || THEMES.green;
+  const theme = THEMES[editorState.theme] || THEMES.classic;
   const header = document.getElementById("nano-header");
   const content = document.getElementById("nano-content");
   const statusBar = document.getElementById("nano-status");

@@ -1,6 +1,7 @@
 // src/terminal.js
 
 import { dom } from "./dom.js";
+import { cmdPrintVersion } from "./commands.js";
 
 export function print(text = "") {
   const div = document.createElement("div");
