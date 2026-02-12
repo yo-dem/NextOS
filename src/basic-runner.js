@@ -366,14 +366,20 @@ class BasicInterpreter {
 
     console.log("Variables:", this.variables);
 
-    // Prima sostituisci le variabili con i loro valori
+    // Prima sostituisci le variabili con i loro valori (CASE-INSENSITIVE)
     for (const [name, val] of Object.entries(this.variables)) {
-      const regex = new RegExp(`\\b${name}\\b`, "g");
+      const regex = new RegExp(`\\b${name}\\b`, "gi"); // Added 'i' flag for case-insensitive
       const valStr = typeof val === "string" ? `"${val}"` : val;
       console.log(`Replacing ${name} with ${valStr} (type: ${typeof val})`);
       cond = cond.replace(regex, valStr);
       console.log("After replacement:", JSON.stringify(cond));
     }
+
+    // Sostituisci operatori logici BASIC con JavaScript
+    cond = cond.replace(/\bAND\b/gi, "&&");
+    cond = cond.replace(/\bOR\b/gi, "||");
+    cond = cond.replace(/\bNOT\b/gi, "!");
+    console.log("After logical operators:", JSON.stringify(cond));
 
     // Poi sostituisci = con === SOLO fuori dalle stringhe
     let result = "";
