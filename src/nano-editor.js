@@ -35,14 +35,14 @@ const THEMES = {
     statusText: "#d4a574",
   },
   dracula: {
-    bg: "#282a36",
-    fg: "#f6f2f8",
-    cursor: "#50fa7b",
+    bg: "#2f3244",
+    fg: "#bebebe",
+    cursor: "#797979",
     cursorBg: "#282a36",
-    lineNum: "#6272a4",
+    lineNum: "#ffffff",
     header: "#44475a",
     headerText: "#ffae89",
-    border: "#6272a4",
+    border: "#a3b4e4",
     status: "#44475a",
     statusText: "#ffae89",
   },
@@ -77,6 +77,7 @@ class NanoEditor {
     this.message = "";
     this.messageTimeout = null;
     this.theme = localStorage.getItem("terminal_theme") || "classic";
+    this.fontSize = parseInt(localStorage.getItem("nano_font_size")) || 14;
   }
 
   getCurrentLine() {
@@ -361,6 +362,31 @@ class NanoEditor {
     }, 2000);
   }
 
+  increaseFontSize() {
+    if (this.fontSize < 32) {
+      this.fontSize += 2;
+      localStorage.setItem("nano_font_size", this.fontSize);
+      this.updateFontSize();
+      this.showMessage(`Font size: ${this.fontSize}px`);
+    }
+  }
+
+  decreaseFontSize() {
+    if (this.fontSize > 8) {
+      this.fontSize -= 2;
+      localStorage.setItem("nano_font_size", this.fontSize);
+      this.updateFontSize();
+      this.showMessage(`Font size: ${this.fontSize}px`);
+    }
+  }
+
+  updateFontSize() {
+    const content = document.getElementById("nano-content");
+    if (content) {
+      content.style.fontSize = `${this.fontSize}px`;
+    }
+  }
+
   save() {
     const content = this.lines.join("\n");
 
@@ -470,6 +496,7 @@ function createEditorUI() {
     display: flex;
     flex-direction: column;
     z-index: 1000;
+    font-size: ${editorState.fontSize}px;
   `;
 
   // Header
@@ -481,6 +508,7 @@ function createEditorUI() {
     padding: 8px 12px;
     font-weight: bold;
     border-bottom: 2px solid ${theme.border};
+    font-size: 14px;
   `;
   editorContainer.appendChild(header);
 
@@ -538,6 +566,7 @@ function createEditorUI() {
     border-top: 2px solid ${theme.border};
     display: flex;
     justify-content: space-between;
+    font-size: 14px;
   `;
   editorContainer.appendChild(statusBar);
 
@@ -641,7 +670,7 @@ function renderEditor() {
   const posInfo = `Line ${editorState.cursorRow + 1}/${editorState.lines.length}, Col ${editorState.cursorCol + 1}`;
   const message =
     editorState.message ||
-    "^S Save  ^X Exit  ^C Copy  ^V Paste  ^K Cut  ^A Select All";
+    "^Q Exit  ^S Save  ^C Copy  ^V Paste  ^X Cut  ^A Select All  ^+/- Font Size";
 
   statusBar.innerHTML = `
     <span>${posInfo}</span>
@@ -666,7 +695,7 @@ function handleEditorKeydown(e) {
         renderEditor();
         return;
 
-      case "x": // Exit
+      case "q": // Exit
         e.preventDefault();
         exitEditor();
         return;
@@ -683,7 +712,7 @@ function handleEditorKeydown(e) {
         renderEditor();
         return;
 
-      case "k": // Cut
+      case "x": // Cut
         e.preventDefault();
         editorState.cut();
         renderEditor();
@@ -693,6 +722,20 @@ function handleEditorKeydown(e) {
         e.preventDefault();
         editorState.selectAll();
         editorState.showMessage("Selected all text");
+        renderEditor();
+        return;
+
+      case "+": // NUOVO - Aumenta font
+      case "=": // Anche = senza shift
+        e.preventDefault();
+        editorState.increaseFontSize();
+        renderEditor();
+        return;
+
+      case "-": // NUOVO - Diminuisci font
+      case "_": // Anche _ con shift
+        e.preventDefault();
+        editorState.decreaseFontSize();
         renderEditor();
         return;
 

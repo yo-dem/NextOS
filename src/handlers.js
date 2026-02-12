@@ -7,6 +7,7 @@ import { autocomplete } from "./fs.js";
 import { print } from "./terminal.js";
 import { clearTerminal } from "./terminal.js";
 import { requestBreak } from "./basic-runner.js";
+import { cmdPrintVersion } from "./commands.js";
 
 /* ===========================
    EVENTS DOM
@@ -149,7 +150,7 @@ export function handleTab(e) {
 
   if (result.matches.length === 1) {
     // Un solo match: completa tutto
-    let completePath = result.basePath + result.matches[0]; 
+    let completePath = result.basePath + result.matches[0];
 
     // Se è una directory, aggiungi / alla fine
     if (result.isDirectory && result.isDirectory[0]) {

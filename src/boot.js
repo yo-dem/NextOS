@@ -1,17 +1,17 @@
 // src/boot.js
 
-import { print, clearTerminal } from "./terminal.js";
+import { print } from "./terminal.js";
 import { dom } from "./dom.js";
 import { updatePrompt } from "./prompt.js";
-import { state } from "./state.js";
-import { cmdPrintVersion } from "./commands.js";
+import { state, VERSION } from "./state.js";
 
 export function bootSequence() {
-  print("");
   print("      ▄▀▄     ▄▀▄");
   print("     ▄█░░▀▀▀▀▀░░█▄");
   print(" ▄▄  █░░░░░░░░░░░█  ▄▄");
   print("█▄▄█ █░░▀░░┬░░▀░░█ █▄▄█");
+  print("");
+  print(VERSION);
   print("");
 
   const lines = [
@@ -25,10 +25,8 @@ export function bootSequence() {
     "",
     " [INFO] Virtual filesystem mounted",
     " [INFO] Initializing user interface...",
-    " [INFO] Starting background services...",
     "",
     "Welcome to NextOS!",
-    "",
     "",
   ];
 
@@ -39,14 +37,11 @@ export function bootSequence() {
       print(lines[i++]);
       setTimeout(next, 100);
     } else {
-      setTimeout(finish, 2200);
+      setTimeout(finish, 500);
     }
   }
 
   function finish() {
-    dom.version.style.display = "none";
-    clearTerminal();
-
     dom.terminal.querySelector(".prompt").classList.remove("hidden");
 
     state.isLoggingIn = false;

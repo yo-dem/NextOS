@@ -1,7 +1,6 @@
 // src/terminal.js
 
 import { dom } from "./dom.js";
-import { cmdPrintVersion } from "./commands.js";
 
 export function print(text = "") {
   const div = document.createElement("div");
@@ -9,6 +8,10 @@ export function print(text = "") {
 
   if (text.startsWith(" [INFO]")) {
     div.style.color = "var(--header-color)";
+  }
+  if (text.startsWith("NextOS Terminal")) {
+    div.style.color = "var(--header-color)";
+    div.style.fontWeight = "bold";
   }
   if (text.includes("[dir]")) {
     div.classList.add("dir");
@@ -29,8 +32,4 @@ export function print(text = "") {
 
 export function clearTerminal() {
   dom.terminal.querySelectorAll(".line").forEach((l) => l.remove());
-
-  print(new Date().toLocaleString());
-  print("SYSTEM READY");
-  print("");
 }

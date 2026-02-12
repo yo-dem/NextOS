@@ -330,8 +330,10 @@ class BasicInterpreter {
 
     // prova a valutare come espressione
     try {
+      // sostituisci RND con Math.random()
+      let evalExpr = expr.replace(/\bRND\b/gi, "Math.random()");
       // sostituisci le variabili conosciute con il loro valore
-      let evalExpr = expr.replace(/\b[A-Z]\w*\b/gi, (match) => {
+      evalExpr = expr.replace(/\b[A-Z]\w*\b/gi, (match) => {
         const varName = match.toUpperCase();
         const val = this.variables[varName];
         if (val === undefined) {

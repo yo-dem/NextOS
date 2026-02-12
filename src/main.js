@@ -16,10 +16,8 @@ import {
 async function start() {
   await loadFS();
 
-  dom.version.innerText = VERSION;
-
-  const savedTheme = loadTheme();
-  applyTheme(savedTheme);
+  let savedTheme = loadTheme();
+  applyTheme(savedTheme || "classic");
 
   bootSequence();
 

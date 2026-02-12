@@ -602,7 +602,6 @@ export function cmdCp(args) {
 }
 
 export function cmdClear() {
-  //terminal.querySelectorAll(".line").forEach((l) => l.remove());
   clearTerminal();
 }
 
@@ -624,7 +623,7 @@ export function cmdPrintDateTime() {
 }
 
 export function cmdPrintVersion() {
-  print("");
+  clearTerminal();
   print("      ▄▀▄     ▄▀▄");
   print("     ▄█░░▀▀▀▀▀░░█▄");
   print(" ▄▄  █░░░░░░░░░░░█  ▄▄");
@@ -632,11 +631,12 @@ export function cmdPrintVersion() {
   print("");
   print("" + VERSION);
   print("");
+  print(new Date().toLocaleString());
+  print("SYSTEM READY");
+  print("");
 }
 
 export function cmdLogin() {
-  clearTerminal();
-
   state.isLoggingIn = true;
   state.loginStep = 0;
   state.loginUser = null;
@@ -644,6 +644,7 @@ export function cmdLogin() {
 
   updatePrompt();
 
+  clearTerminal();
   print("Insert username:");
   print("");
 }
@@ -660,6 +661,7 @@ export function cmdLogout(silently = false) {
   updateCaret();
 
   if (!silently) {
+    print("");
     print("Logged out. Welcome guest.");
     print("");
   }
