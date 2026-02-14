@@ -195,8 +195,7 @@ export function cmdRmdir(path) {
     return;
   }
 
-  print(`Remove directory '${path}'?`);
-  print("y/N:");
+  print(`Remove directory '${path}'? (y/N)`);
   print("");
 
   state.waitingConfirm = {
@@ -258,7 +257,7 @@ export function cmdRm(args) {
       print(`  ${name} ${type}`);
     });
     print("");
-    print("Continue? y/N:");
+    print("Continue? (y/N)");
     print("");
 
     state.waitingConfirm = {
@@ -307,10 +306,10 @@ export function cmdRm(args) {
 
   if (target.type === "dir") {
     msg = recursive
-      ? `Remove recursively '${targetPattern}'?\ny/N:`
+      ? `Remove recursively '${targetPattern}'? (y/N)`
       : `rm: '${targetPattern}': is a directory`;
   } else {
-    msg = `Remove '${targetPattern}'?\ny/N:`;
+    msg = `Remove '${targetPattern}'? (y/N)`;
   }
 
   if (target.type === "dir" && !recursive) {
@@ -435,8 +434,7 @@ export function cmdRmLink(path) {
     return;
   }
 
-  print(`Remove link '${name}'?`);
-  print("y/N:");
+  print(`Remove link '${name}'? (y/N)`);
   print("");
 
   state.waitingConfirm = {
@@ -640,8 +638,7 @@ export function cmdClear() {
 }
 
 export function cmdReset() {
-  print(`All personal file or directory will be lost.`);
-  print("y/N:");
+  print(`All personal file or directory will be lost. Continue? (y/N)`);
   print("");
 
   state.waitingConfirm = {
@@ -828,7 +825,7 @@ export async function handleConfirm(value) {
   if (confirm.type === "rmdir") {
     delete confirm.parentNode.children[confirm.name];
     saveFS();
-
+    print("");
     print(`Removed: ${confirm.path}/`);
     print("");
     updatePrompt();
@@ -840,7 +837,7 @@ export async function handleConfirm(value) {
     delete confirm.parentNode.children[confirm.name];
 
     saveFS();
-
+    print("");
     print(`Removed: ${confirm.path}`);
     print("");
     updatePrompt();
@@ -867,6 +864,7 @@ export async function handleConfirm(value) {
 
     saveFS();
 
+    print("");
     print(`Removed ${removed} item(s) matching '${confirm.pattern}'`);
     print("");
     updatePrompt();
@@ -879,8 +877,10 @@ export async function handleConfirm(value) {
     saveFS();
 
     if (confirm.isDir) {
+      print("");
       print(`Removed recursively: ${confirm.path}/`);
     } else {
+      print("");
       print(`Removed: ${confirm.path}`);
     }
 
