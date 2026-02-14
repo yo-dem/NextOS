@@ -8,6 +8,7 @@ import { clearTerminal, print } from "./terminal.js";
 import { applyTheme } from "./theme.js";
 import { openEditor } from "./editor.js";
 import { runBasicFile } from "./basic-runner.js";
+import { bootSequence } from "./boot.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -800,6 +801,7 @@ export async function handleConfirm(value) {
   const confirm = state.waitingConfirm;
   state.waitingConfirm = null;
 
+  // Accetta solo "y" esplicito (case insensitive)
   if (value.toLowerCase() !== "y") {
     print("Action cancelled.");
     print("");
@@ -807,9 +809,45 @@ export async function handleConfirm(value) {
     return;
   }
 
-  // ... codice esistente per RESET, RMDIR, RMLINK ...
+  // RESET
+  if (confirm.type === "reset") {
+    applyTheme("dracula");
+    cmdLogout(true);
+    clearTerminal();
+    state.history = [];
+    state.historyIndex = -1;
+    localStorage.clear();
+    await loadFS();
 
-  // RM-GLOB (nuovo)
+    dom.terminal.querySelector(".prompt").classList.add("hidden");
+    bootSequence();
+    return;
+  }
+
+  // RMDIR
+  if (confirm.type === "rmdir") {
+    delete confirm.parentNode.children[confirm.name];
+    saveFS();
+
+    print(`Removed: ${confirm.path}/`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  // RMLINK
+  if (confirm.type === "rmlink") {
+    delete confirm.parentNode.children[confirm.name];
+
+    saveFS();
+
+    print(`Removed: ${confirm.path}`);
+    print("");
+    updatePrompt();
+    return;
+  }
+
+  // RM-GLOB
   if (confirm.type === "rm-glob") {
     const currentNode = getNode(state.cwd);
     let removed = 0;
@@ -835,7 +873,7 @@ export async function handleConfirm(value) {
     return;
   }
 
-  // RM (codice esistente)
+  // RM
   if (confirm.type === "rm") {
     delete confirm.parentNode.children[confirm.name];
     saveFS();

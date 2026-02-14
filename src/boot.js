@@ -2,7 +2,7 @@
 
 import { print } from "./terminal.js";
 import { dom } from "./dom.js";
-import { updatePrompt } from "./prompt.js";
+import { updateCaret, updatePrompt } from "./prompt.js";
 import { state, VERSION } from "./state.js";
 
 export function bootSequence() {
@@ -38,13 +38,12 @@ export function bootSequence() {
       print(lines[i++]);
       setTimeout(next, 100);
     } else {
+      dom.terminal.querySelector(".prompt").classList.remove("hidden");
       setTimeout(finish, 500);
     }
   }
 
   function finish() {
-    dom.terminal.querySelector(".prompt").classList.remove("hidden");
-
     state.isLoggingIn = false;
     dom.input.disabled = false;
     dom.input.focus();
