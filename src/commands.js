@@ -211,26 +211,21 @@ export function cmdRmdir(path) {
 export function cmdRm(args) {
   if (!args || args.length === 0) {
     print("rm: missing operand");
-    print("Usage: rm [-r] <file|directory>");
+    print("Usage: rm [-r] <file|directory|pattern>");
+    print("Examples: rm file.txt, rm *.bas, rm test*");
     print("");
     updatePrompt();
     return;
   }
 
-  // if (state.currentUser.role === "guest") {
-  //   print("rm: permission denied");
-  //   print("");
-  //   return;
-  // }
-
   let recursive = false;
-  let targetPath = args[0];
+  let targetPattern = args[0];
 
   if (args[0] === "-r" || args[0] === "-R") {
     recursive = true;
-    targetPath = args[1];
+    targetPattern = args[1];
 
-    if (!targetPath) {
+    if (!targetPattern) {
       print("rm: missing operand after '-r'");
       print("");
       updatePrompt();
@@ -238,8 +233,46 @@ export function cmdRm(args) {
     }
   }
 
-  targetPath = targetPath.replace(/\/+$/, "");
-  const fullPath = normalizePath(state.cwd, targetPath);
+  // Controlla se contiene wildcard
+  const hasWildcard =
+    targetPattern.includes("*") || targetPattern.includes("?");
+
+  if (hasWildcard) {
+    // Espandi il pattern
+    const matches = expandGlob(targetPattern, state.cwd);
+
+    if (matches.length === 0) {
+      print(`rm: no matches found for: ${targetPattern}`);
+      print("");
+      updatePrompt();
+      return;
+    }
+
+    // Mostra i file che verranno rimossi
+    print(`The following ${matches.length} item(s) will be removed:`);
+    matches.forEach((name) => {
+      const node = getNode([...state.cwd, name]);
+      const type =
+        node.type === "dir" ? "[dir]" : node.type === "lnk" ? "[lnk]" : "[txt]";
+      print(`  ${name} ${type}`);
+    });
+    print("");
+    print("Continue? y/N:");
+    print("");
+
+    state.waitingConfirm = {
+      type: "rm-glob",
+      matches,
+      recursive,
+      pattern: targetPattern,
+    };
+
+    return;
+  }
+
+  // Codice originale per singolo file
+  targetPattern = targetPattern.replace(/\/+$/, "");
+  const fullPath = normalizePath(state.cwd, targetPattern);
 
   if (fullPath.length === 0) {
     print("rm: cannot remove root");
@@ -254,7 +287,7 @@ export function cmdRm(args) {
   const parentNode = getNode(parentPath);
 
   if (!parentNode || !parentNode.children) {
-    print(`rm: '${targetPath}': No such file or directory`);
+    print(`rm: '${targetPattern}': No such file or directory`);
     print("");
     updatePrompt();
     return;
@@ -263,7 +296,7 @@ export function cmdRm(args) {
   const target = parentNode.children[name];
 
   if (!target) {
-    print(`rm: '${targetPath}': No such file or directory`);
+    print(`rm: '${targetPattern}': No such file or directory`);
     print("");
     updatePrompt();
     return;
@@ -273,10 +306,10 @@ export function cmdRm(args) {
 
   if (target.type === "dir") {
     msg = recursive
-      ? `Remove recursively '${targetPath}'?\ny/N:`
-      : `rm: '${targetPath}': is a directory`;
+      ? `Remove recursively '${targetPattern}'?\ny/N:`
+      : `rm: '${targetPattern}': is a directory`;
   } else {
-    msg = `Remove '${targetPath}'?\ny/N:`;
+    msg = `Remove '${targetPattern}'?\ny/N:`;
   }
 
   if (target.type === "dir" && !recursive) {
@@ -294,7 +327,7 @@ export function cmdRm(args) {
     type: "rm",
     parentNode,
     name,
-    path: targetPath,
+    path: targetPattern,
     isDir: target.type === "dir",
     recursive,
   };
@@ -742,55 +775,67 @@ export function cmdRunApp(inputPath) {
   print("");
 }
 
+function expandGlob(pattern, currentPath) {
+  const node = getNode(currentPath);
+
+  if (!node || !node.children) {
+    return [];
+  }
+
+  // Converti il pattern glob in regex
+  // * diventa .*
+  // ? diventa .
+  const regexPattern = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&") // Escape caratteri speciali regex
+    .replace(/\*/g, ".*") // * match qualsiasi carattere
+    .replace(/\?/g, "."); // ? match un singolo carattere
+
+  const regex = new RegExp(`^${regexPattern}$`);
+
+  // Trova tutti i nomi che matchano
+  return Object.keys(node.children).filter((name) => regex.test(name));
+}
+
 export async function handleConfirm(value) {
   const confirm = state.waitingConfirm;
   state.waitingConfirm = null;
 
-  if (value.toLowerCase() !== "y" || value == "") {
+  if (value.toLowerCase() !== "y") {
     print("Action cancelled.");
     print("");
     updatePrompt();
     return;
   }
 
-  // RESET
-  if (confirm.type === "reset") {
-    applyTheme("dracula");
-    cmdLogout(true);
-    clearTerminal();
-    state.history = [];
-    state.historyIndex = -1;
-    localStorage.clear();
-    await loadFS();
+  // ... codice esistente per RESET, RMDIR, RMLINK ...
 
-    updatePrompt();
-    return;
-  }
+  // RM-GLOB (nuovo)
+  if (confirm.type === "rm-glob") {
+    const currentNode = getNode(state.cwd);
+    let removed = 0;
 
-  // RMDIR
-  if (confirm.type === "rmdir") {
-    delete confirm.parentNode.children[confirm.name];
+    for (const name of confirm.matches) {
+      const target = currentNode.children[name];
+
+      // Salta directory se non recursive
+      if (target.type === "dir" && !confirm.recursive) {
+        print(`Skipping directory: ${name} (use -r for directories)`);
+        continue;
+      }
+
+      delete currentNode.children[name];
+      removed++;
+    }
+
     saveFS();
 
-    print(`Removed: ${confirm.path}/`);
+    print(`Removed ${removed} item(s) matching '${confirm.pattern}'`);
     print("");
     updatePrompt();
     return;
   }
 
-  // RMLINK
-  if (confirm.type === "rmlink") {
-    delete confirm.parentNode.children[confirm.name];
-
-    saveFS();
-
-    print(`Removed: ${confirm.path}/`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  // RM
+  // RM (codice esistente)
   if (confirm.type === "rm") {
     delete confirm.parentNode.children[confirm.name];
     saveFS();

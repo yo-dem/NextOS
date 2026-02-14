@@ -21,6 +21,8 @@ let yankBuffer = ""; // Buffer per yank/paste
 let undoHistory = []; // Stack per undo
 let redoHistory = []; // Stack per redo
 let maxUndoSteps = 100;
+let isFileModified = false;
+let originalContent = "";
 
 export function openEditor(path) {
   editorCursorCol = 0;
@@ -84,6 +86,10 @@ export function openEditor(path) {
     // Nuovo file
     editorContent = [""];
   }
+
+  // Salva contenuto originale per confronto
+  originalContent = editorContent.join("\n");
+  isFileModified = false;
 
   // Salva stato iniziale per undo
   saveUndoState();
@@ -207,7 +213,8 @@ function updateStatusBar() {
   } else {
     const modeText = editorMode === "INSERT" ? "-- INSERT --" : "-- NORMAL --";
     const position = `Line ${editorCursorLine + 1}/${editorContent.length}`;
-    statusText = `${modeText}  |  ${editorFilename}  |  ${position}`;
+    const modified = isFileModified ? " [+]" : "";
+    statusText = `${modeText}  |  ${editorFilename}${modified}  |  ${position}`;
   }
 
   editorStatusBar.textContent = statusText;
@@ -256,28 +263,37 @@ function saveUndoState() {
 
   // Pulisce redo quando si fa una nuova modifica
   redoHistory = [];
+
+  // Marca come modificato (solo se non è il primo salvataggio)
+  if (undoHistory.length > 1) {
+    checkIfModified();
+  }
+}
+
+// Funzione per verificare se il contenuto è stato modificato
+function checkIfModified() {
+  const currentContent = editorContent.join("\n");
+  isFileModified = currentContent !== originalContent;
 }
 
 function undo() {
-  if (undoHistory.length <= 1) return; // Mantieni almeno lo stato iniziale
+  if (undoHistory.length <= 1) return;
 
-  // Salva stato corrente in redo
   redoHistory.push({
     content: editorContent.map((line) => line),
     cursorLine: editorCursorLine,
     cursorCol: editorCursorCol,
   });
 
-  // Rimuovi stato corrente
   undoHistory.pop();
 
-  // Ripristina stato precedente
   const prevState = undoHistory[undoHistory.length - 1];
   editorContent = prevState.content.map((line) => line);
   editorCursorLine = Math.min(prevState.cursorLine, editorContent.length - 1);
   editorCursorCol = prevState.cursorCol;
 
   clampCursorCol();
+  checkIfModified(); // Verifica se ancora modificato
   updateEditorDisplay();
 }
 
@@ -286,19 +302,18 @@ function redo() {
 
   const nextState = redoHistory.pop();
 
-  // Salva stato corrente in undo
   undoHistory.push({
     content: editorContent.map((line) => line),
     cursorLine: editorCursorLine,
     cursorCol: editorCursorCol,
   });
 
-  // Ripristina stato
   editorContent = nextState.content.map((line) => line);
   editorCursorLine = Math.min(nextState.cursorLine, editorContent.length - 1);
   editorCursorCol = nextState.cursorCol;
 
   clampCursorCol();
+  checkIfModified(); // Verifica se ancora modificato
   updateEditorDisplay();
 }
 
@@ -648,13 +663,12 @@ function handleCommandMode(e) {
   }
 
   if (e.key === "Enter") {
-    executeCommand(commandBuffer);
+    const result = executeCommand(commandBuffer);
 
+    // Solo se executeCommand non ha gestito l'errore
     commandBuffer = "";
-    editorMode = "NORMAL";
 
-    updateEditorDisplay();
-    updateStatusBar();
+    // Non chiamare updateStatusBar() qui - lo fa executeCommand quando necessario
     return;
   }
 
@@ -670,27 +684,64 @@ function handleCommandMode(e) {
   }
 }
 
+// Modifica executeCommand per mostrare il messaggio di errore
 function executeCommand(cmd) {
   if (cmd === "w") {
     saveFile();
-  } else if (cmd === "wq") {
+    return; // IMPORTANTE: esci qui
+  } else if (cmd === "wq" || cmd === "x") {
     saveFile();
     closeEditor(true);
+    return;
   } else if (cmd === "q") {
+    if (isFileModified) {
+      editorStatusBar.textContent =
+        "E37: No write since last change (add ! to override)";
+      editorMode = "NORMAL";
+      setTimeout(() => {
+        if (state.editorActive) {
+          updateStatusBar();
+        }
+      }, 2000);
+      return;
+    }
     closeEditor(false);
+    return;
   } else if (cmd === "q!") {
-    closeEditor(false);
+    closeEditor(false, true);
+    return;
   } else if (cmd.match(/^\d+$/)) {
-    // Vai a riga numero (es. :10)
     const lineNum = parseInt(cmd, 10) - 1;
     if (lineNum >= 0 && lineNum < editorContent.length) {
       editorCursorLine = lineNum;
       editorCursorCol = 0;
       updateEditorDisplay();
     }
+    return;
+  } else if (cmd.startsWith("w ")) {
+    const newName = cmd.substring(2).trim();
+    if (isValidName(newName)) {
+      editorFilename = newName;
+      saveFile();
+    } else {
+      editorStatusBar.textContent = `E32: Invalid file name: ${newName}`;
+      editorMode = "NORMAL";
+      setTimeout(() => {
+        if (state.editorActive) {
+          updateStatusBar();
+        }
+      }, 2000);
+    }
+    return;
   } else {
-    // Comando non riconosciuto, torna in normal mode
+    editorStatusBar.textContent = `E492: Not an editor command: ${cmd}`;
     editorMode = "NORMAL";
+    setTimeout(() => {
+      if (state.editorActive) {
+        updateStatusBar();
+      }
+    }, 2000);
+    return;
   }
 }
 
@@ -713,9 +764,24 @@ function saveFile() {
   };
 
   saveFS();
+
+  // Aggiorna contenuto originale e resetta flag
+  originalContent = content;
+  isFileModified = false;
+
+  // Passa in NORMAL mode
+  editorMode = "NORMAL";
+
+  // Mostra messaggio di salvataggio
+  editorStatusBar.textContent = `"${editorFilename}" ${editorContent.length}L, ${size.bytes}B written`;
+  setTimeout(() => {
+    if (state.editorActive) {
+      updateStatusBar(); // Questo mostrerà la status bar normale con -- NORMAL --
+    }
+  }, 1500);
 }
 
-function closeEditor(saved = true) {
+function closeEditor(saved = false, forced = false) {
   state.editorActive = false;
   document.removeEventListener("keydown", editorKeyHandler);
 
@@ -728,9 +794,14 @@ function closeEditor(saved = true) {
   dom.terminal.querySelector(".prompt").style.display = "flex";
   dom.input.focus();
 
-  if (saved) print(`"${editorFilename}" saved`);
+  if (saved) {
+    print(`"${editorFilename}" saved`);
+  } else if (forced && isFileModified) {
+    print(`"${editorFilename}" closed without saving`);
+  }
   print("");
 
+  // Reset variabili
   editorContent = [];
   editorCursorLine = 0;
   editorCursorCol = 0;
@@ -740,6 +811,8 @@ function closeEditor(saved = true) {
   yankBuffer = "";
   undoHistory = [];
   redoHistory = [];
+  isFileModified = false;
+  originalContent = "";
 }
 
 function handleArrowKeys(e) {
