@@ -43,10 +43,10 @@ const THEMES = {
     cursorBg: "#282a36",
     lineNum: "#ffffff",
     header: "#44475a",
-    headerText: "#ffae89",
+    headerText: "#bedef3",
     border: "#a3b4e4",
     status: "#44475a",
-    statusText: "#ffae89",
+    statusText: "#bedef3",
     selection: "rgba(163, 180, 228, 0.3)",
   },
   terminal: {
@@ -83,7 +83,7 @@ class NanoEditor {
     this.scrollTop = 0;
     this.message = "";
     this.messageTimeout = null;
-    this.theme = localStorage.getItem("terminal_theme") || "classic";
+    this.theme = localStorage.getItem("terminal_theme") || "dracula";
     this.fontSize = parseInt(localStorage.getItem("nano_font_size")) || 14;
     this.undoStack = [];
     this.redoStack = [];
@@ -649,7 +649,7 @@ function createEditorUI() {
   const oldEditor = document.getElementById("nano-editor");
   if (oldEditor) oldEditor.remove();
 
-  const theme = THEMES[editorState.theme] || THEMES.classic;
+  const theme = THEMES[editorState.theme] || THEMES.dracula;
 
   const editorContainer = document.createElement("div");
   editorContainer.id = "nano-editor";
@@ -755,7 +755,7 @@ function createEditorUI() {
 function renderEditor() {
   if (!editorState) return;
 
-  const theme = THEMES[editorState.theme] || THEMES.classic;
+  const theme = THEMES[editorState.theme] || THEMES.dracula;
   const header = document.getElementById("nano-header");
   const content = document.getElementById("nano-content");
   const statusBar = document.getElementById("nano-status");

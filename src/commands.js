@@ -762,7 +762,7 @@ export function cmdRunApp(inputPath) {
     return;
   }
 
-  // Get current theme from localStorage or default to classic
+  // Get current theme from localStorage or default to dracula
   const currentTheme = localStorage.getItem("terminal_theme") || "dracula";
 
   // Build URL with theme parameter

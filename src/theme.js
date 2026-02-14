@@ -91,7 +91,7 @@ export function getAvailableThemes() {
 export function cmdTheme(args) {
   // Nessun argomento: mostra info sui temi
   if (!args || args.length === 0) {
-    const currentTheme = localStorage.getItem("terminal_theme") || "classic";
+    const currentTheme = localStorage.getItem("terminal_theme") || "dracula";
 
     print("");
     print("Current theme: " + themes[currentTheme].name);
