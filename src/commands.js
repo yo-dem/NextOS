@@ -94,6 +94,7 @@ export function cmdCd(path) {
 export function cmdMkdir(dirName) {
   if (!dirName) {
     print("mkdir: missing directory name");
+    print("Usage: mkdir <directory>");
     print("");
     return;
   }
@@ -138,6 +139,7 @@ export function cmdMkdir(dirName) {
 export function cmdRmdir(path) {
   if (!path) {
     print("rmdir: missing directory name");
+    print("Usage: rmdir <directory>");
     print("");
     updatePrompt();
     return;
@@ -337,7 +339,7 @@ export function cmdRm(args) {
 
 export function cmdMkLink(args) {
   if (!args || args.length !== 2) {
-    print("ln: missing operand");
+    print("mklink: missing operand");
     print("Usage: mklink <url> <name>");
     print("");
     return;
@@ -390,6 +392,7 @@ export function cmdMkLink(args) {
 export function cmdRmLink(path) {
   if (!path) {
     print("rmlink: missing link name");
+    print("Usage: rmlink <link>");
     print("");
     updatePrompt();
     return;
@@ -450,7 +453,7 @@ export function cmdRmLink(path) {
 export function cmdMv(args) {
   if (args.length !== 2) {
     print("mv: missing operand");
-    print("Usage: mv SOURCE DEST");
+    print("Usage: mv <source> <destination>");
     print("");
     return;
   }
@@ -544,7 +547,7 @@ export function cmdMv(args) {
 export function cmdCp(args) {
   if (!args || args.length < 2) {
     print("cp: missing operand");
-    print("Usage: cp [-r] SOURCE DEST");
+    print("Usage: cp [-r] <source> <destination>");
     print("");
     return;
   }
@@ -692,7 +695,6 @@ export function cmdLogout(silently = false) {
   updateCaret();
 
   if (!silently) {
-    print("");
     print("Logged out. Welcome guest.");
     print("");
   }
@@ -707,7 +709,7 @@ export function cmdOpenEditor(path) {
 
 export function cmdRun(args) {
   if (!args || args.length === 0) {
-    print("");
+    print("run: missing file operand");
     print("Usage: run <file.bas>");
     print("");
     print("Execute a BASIC program from the terminal.");
@@ -722,7 +724,6 @@ export function cmdRun(args) {
 
   // Check extension
   if (!filepath.endsWith(".bas")) {
-    print("");
     print("Warning: File should have .bas extension");
     print("");
     updatePrompt();
