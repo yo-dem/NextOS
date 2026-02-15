@@ -46,6 +46,24 @@ export const helpTexts = {
     "  mv a b",
   ],
 
+  cp: [
+    "Usage: cp [-r] <src> <dst>",
+    "",
+    "Description:",
+    "  Copy files or directories.",
+    "",
+    "Options:",
+    "  -r   Recursive (for directories)",
+    "",
+    "Arguments:",
+    "  src   Source path",
+    "  dst   Destination path",
+    "",
+    "Examples:",
+    "  cp file1 file2",
+    "  cp -r dir1 dir2",
+  ],
+
   mkdir: [
     "Usage: mkdir <dir>",
     "",
