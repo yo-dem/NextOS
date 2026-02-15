@@ -579,7 +579,6 @@ export function cmdClear() {
 
 export function cmdReset() {
   print(`All personal file or directory will be lost. Continue? (y/N)`);
-  print("");
 
   state.waitingConfirm = {
     type: "reset",
