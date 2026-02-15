@@ -258,7 +258,6 @@ export function cmdRm(args) {
         node.type === "dir" ? "[dir]" : node.type === "lnk" ? "[lnk]" : "[txt]";
       print(`  ${name} ${type}`);
     });
-    print("");
     print("Continue? (y/N)");
     print("");
 
@@ -323,7 +322,6 @@ export function cmdRm(args) {
   }
 
   print(msg);
-  print("");
 
   state.waitingConfirm = {
     type: "rm",
@@ -387,67 +385,6 @@ export function cmdMkLink(args) {
 
   print(`Link created: ${name} -> ${url}`);
   print("");
-}
-
-export function cmdRmLink(path) {
-  if (!path) {
-    print("rmlink: missing link name");
-    print("Usage: rmlink <link>");
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  path = path.replace(/\/+$/, "");
-
-  const fullPath = normalizePath(state.cwd, path);
-
-  if (fullPath.length === 0) {
-    print("rmlink: cannot remove link");
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  const name = fullPath.pop();
-  const parentPath = fullPath;
-
-  const parentNode = getNode(parentPath);
-
-  if (!parentNode || !parentNode.children) {
-    print(`rmlink: '${path}': No such link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  const target = parentNode.children[name];
-
-  if (!target) {
-    print(`rmlink: '${path}': No such link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  if (target.type !== "lnk") {
-    print(`rmlink: '${path}': Not a link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  print(`Remove link '${name}'? (y/N)`);
-  print("");
-
-  state.waitingConfirm = {
-    type: "rmlink",
-    parentNode,
-    name,
-    path,
-  };
-
-  return;
 }
 
 export function cmdMv(args) {
@@ -739,7 +676,7 @@ export function cmdHelp() {
   print("NEXTOS TERMINAL - Quick Reference");
   print("");
   print("Directories:     ls, cd,  mkdir, rmdir, rm [-r]");
-  print("Files:           mklink, rmlink, mv, cp, rm");
+  print("Files:           mklink, mv, cp, rm");
   print("System:          clear, reset, time, version");
   print("User:            login, logout");
   print("Other:           vi, run, theme, help");
@@ -826,20 +763,7 @@ export async function handleConfirm(value) {
   if (confirm.type === "rmdir") {
     delete confirm.parentNode.children[confirm.name];
     saveFS();
-    print("");
     print(`Removed: ${confirm.path}/`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  // RMLINK
-  if (confirm.type === "rmlink") {
-    delete confirm.parentNode.children[confirm.name];
-
-    saveFS();
-    print("");
-    print(`Removed: ${confirm.path}`);
     print("");
     updatePrompt();
     return;
@@ -865,7 +789,6 @@ export async function handleConfirm(value) {
 
     saveFS();
 
-    print("");
     print(`Removed ${removed} item(s) matching '${confirm.pattern}'`);
     print("");
     updatePrompt();
@@ -878,10 +801,8 @@ export async function handleConfirm(value) {
     saveFS();
 
     if (confirm.isDir) {
-      print("");
       print(`Removed recursively: ${confirm.path}/`);
     } else {
-      print("");
       print(`Removed: ${confirm.path}`);
     }
 

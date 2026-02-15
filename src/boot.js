@@ -2,7 +2,7 @@
 
 import { print } from "./terminal.js";
 import { dom } from "./dom.js";
-import { updateCaret, updatePrompt } from "./prompt.js";
+import { updatePrompt } from "./prompt.js";
 import { state, VERSION } from "./state.js";
 
 export function bootSequence() {
@@ -20,10 +20,11 @@ export function bootSequence() {
     "",
     "Loading core modules:",
     "",
+    " [OK] TERMINAL NextTerminal          1.1.7",
     " [OK] FILESYSTEM NextVFS             1.1.7",
-    " [OK] EDITOR NextVI                  1.0.0",
-    " [OK] EDITOR NextNANO                1.0.0",
-    " [OK] INTERPRETER NextBASIC          0.7.1",
+    " [OK] EDITOR NextVi                  1.0.0",
+    " [OK] EDITOR NextNano                1.0.0",
+    " [OK] INTERPRETER NextBasic          0.7.1",
     "",
     " [INFO] Initializing user interface...",
     "",
