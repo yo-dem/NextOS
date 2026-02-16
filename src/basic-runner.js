@@ -163,7 +163,8 @@ class BasicInterpreter {
         if (!tokens[1] || !/^\d+$/.test(tokens[1])) {
           throw new Error(`Invalid GOSUB syntax. Use: GOSUB line_number`);
         }
-        this.returnStack.push(this.currentLine);
+        // Salva l'indice SUCCESSIVO (quello a cui torneremo dopo RETURN)
+        this.returnStack.push(this.currentLine + 1);
         return parseInt(tokens[1]);
       }
 
@@ -171,7 +172,8 @@ class BasicInterpreter {
         if (this.returnStack.length === 0) {
           throw new Error("RETURN without GOSUB");
         }
-        this.currentLine = this.returnStack.pop();
+        // Ripristina l'indice e decrementa perché il loop principale incrementerà
+        this.currentLine = this.returnStack.pop() - 1;
         break;
       }
 

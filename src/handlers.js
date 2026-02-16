@@ -7,7 +7,6 @@ import { autocomplete } from "./fs.js";
 import { print } from "./terminal.js";
 import { clearTerminal } from "./terminal.js";
 import { requestBreak } from "./basic-runner.js";
-import { cmdPrintVersion } from "./commands.js";
 
 /* ===========================
    EVENTS DOM
