@@ -747,6 +747,7 @@ function createEditorUI() {
 
   // Event listeners
   content.addEventListener("keydown", handleEditorKeydown);
+  content.addEventListener("mousedown", handleEditorMouseDown);
 }
 
 /**
@@ -833,7 +834,20 @@ function renderEditor() {
   // Scroll to current line (instant, no smooth animation)
   const currentLine = document.getElementById("nano-current-line");
   if (currentLine) {
-    currentLine.scrollIntoView({ block: "center", behavior: "auto" });
+    const content = document.getElementById("nano-content");
+
+    const lineTop = currentLine.offsetTop;
+    const lineBottom = lineTop + currentLine.offsetHeight;
+
+    const viewTop = content.scrollTop;
+    const viewBottom = viewTop + content.clientHeight;
+
+    // Scrolla solo se fuori vista
+    if (lineTop < viewTop) {
+      content.scrollTop = lineTop;
+    } else if (lineBottom > viewBottom) {
+      content.scrollTop = lineBottom - content.clientHeight;
+    }
   }
 
   // Update status bar
@@ -1191,4 +1205,60 @@ export function setNanoTheme(themeName) {
  */
 export function getNanoThemes() {
   return Object.keys(THEMES);
+}
+
+function handleEditorMouseDown(e) {
+  if (!editorState) return;
+
+  e.preventDefault();
+
+  const content = document.getElementById("nano-content");
+  const rect = content.getBoundingClientRect();
+
+  const clickY = e.clientY - rect.top + content.scrollTop;
+  const clickX = e.clientX - rect.left + content.scrollLeft;
+
+  // Altezza di una riga
+  const lineHeight =
+    parseFloat(getComputedStyle(content).lineHeight) ||
+    editorState.fontSize * 1.4;
+
+  // Larghezza media carattere
+  const charWidth = getCharWidth(content);
+
+  // Calcola riga
+  let row = Math.floor(clickY / lineHeight);
+  row = Math.max(0, Math.min(row, editorState.lines.length - 1));
+
+  const line = editorState.lines[row] || "";
+
+  // Calcola colonna (tolgo numerazione + separatore)
+  const gutterWidth = 6 * charWidth + 12; // "0001 │ "
+
+  let col = Math.floor((clickX - gutterWidth) / charWidth);
+  col = Math.max(0, Math.min(col, line.length));
+
+  editorState.cursorRow = row;
+  editorState.cursorCol = col;
+
+  // Reset selezione
+  editorState.selection = null;
+  editorState.selectionAnchor = null;
+
+  renderEditor();
+}
+
+function getCharWidth(element) {
+  const span = document.createElement("span");
+  span.textContent = "M";
+  span.style.visibility = "hidden";
+  span.style.position = "absolute";
+  span.style.fontFamily = "Courier New, monospace";
+  span.style.fontSize = getComputedStyle(element).fontSize;
+
+  document.body.appendChild(span);
+  const width = span.getBoundingClientRect().width;
+  document.body.removeChild(span);
+
+  return width;
 }

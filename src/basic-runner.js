@@ -334,18 +334,29 @@ class BasicInterpreter {
     try {
       // sostituisci RND con Math.random()
       let evalExpr = expr.replace(/\bRND\b/gi, "Math.random()");
+
+      evalExpr = evalExpr.replace(/\bINT\s*\(([^)]+)\)/gi, "Math.floor($1)");
+
       // sostituisci le variabili conosciute con il loro valore
-      evalExpr = expr.replace(/\b[A-Z]\w*\b/gi, (match) => {
-        const varName = match.toUpperCase();
-        const val = this.variables[varName];
+      // BUG FIX: usa evalExpr invece di expr!
+      // BUG FIX: escludi 'Math' e 'random' dalla sostituzione delle variabili
+      evalExpr = evalExpr.replace(/\b[A-Z]\w*\b/gi, (match) => {
+        const upper = match.toUpperCase();
+        // Non sostituire 'Math' o 'random' - sono parte di JavaScript
+        if (upper === "MATH" || upper === "RANDOM" || upper === "FLOOR") {
+          return match;
+        }
+
+        const val = this.variables[upper];
         if (val === undefined) {
-          throw new Error(`Undefined variable: ${varName}`);
+          throw new Error(`Undefined variable: ${upper}`);
         }
         if (typeof val === "string") return `"${val}"`;
         return val;
       });
 
-      const result = new Function(`return ${evalExpr}`)();
+      // Pass Math object to the function context
+      const result = new Function("Math", `return ${evalExpr}`)(Math);
       return result;
     } catch (err) {
       if (err.message.includes("Undefined variable")) {
@@ -616,6 +627,11 @@ function evalPrintPart(expr, interpreter) {
   // stringa letterale pura
   if (/^".*"$/.test(expr)) return expr.slice(1, -1);
 
+  // RND speciale - gestiscilo subito
+  if (/^\s*RND\s*$/i.test(expr)) {
+    return Math.random();
+  }
+
   // variabile semplice (senza operatori)
   if (/^[A-Z]\w*$/i.test(expr)) {
     const val = interpreter.variables[expr.toUpperCase()];
@@ -635,15 +651,21 @@ function evalPrintPart(expr, interpreter) {
   }
 
   // Altrimenti è un'espressione matematica (A * B, tab * i, ecc.)
+  // BUG FIX: supporta anche RND nelle espressioni PRINT
   try {
-    let evalExpr = expr.replace(/\b[A-Z]\w*\b/gi, (match) => {
-      const varName = match.toUpperCase();
-      const val = interpreter.variables[varName];
+    let evalExpr = expr.replace(/\bRND\b/gi, "Math.random()");
+    evalExpr = evalExpr.replace(/\b[A-Z]\w*\b/gi, (match) => {
+      const upper = match.toUpperCase();
+      // Non sostituire 'Math' o 'random' - sono parte di JavaScript
+      if (upper === "MATH" || upper === "RANDOM") return match;
+
+      const val = interpreter.variables[upper];
       if (val === undefined) return 0;
       return val;
     });
 
-    const result = new Function(`return ${evalExpr}`)();
+    // Pass Math object to the function context
+    const result = new Function("Math", `return ${evalExpr}`)(Math);
     return result;
   } catch {
     return expr; // Fallback: restituisce l'espressione originale
