@@ -17,6 +17,12 @@ let commandBuffer = "";
 let normalBuffer = "";
 let editorDir = null;
 let isNumberOfLineVisible = true;
+let yankBuffer = ""; // Buffer per yank/paste
+let undoHistory = []; // Stack per undo
+let redoHistory = []; // Stack per redo
+let maxUndoSteps = 100;
+let isFileModified = false;
+let originalContent = "";
 
 export function openEditor(path) {
   editorCursorCol = 0;
@@ -60,6 +66,10 @@ export function openEditor(path) {
   editorMode = "NORMAL";
   editorCursorLine = 0;
   commandBuffer = "";
+  normalBuffer = "";
+  yankBuffer = "";
+  undoHistory = [];
+  redoHistory = [];
 
   // Carica contenuto se il file esiste
   if (dirNode.children[fileName]) {
@@ -76,6 +86,13 @@ export function openEditor(path) {
     // Nuovo file
     editorContent = [""];
   }
+
+  // Salva contenuto originale per confronto
+  originalContent = editorContent.join("\n");
+  isFileModified = false;
+
+  // Salva stato iniziale per undo
+  saveUndoState();
 
   createEditorUI();
 }
@@ -196,7 +213,8 @@ function updateStatusBar() {
   } else {
     const modeText = editorMode === "INSERT" ? "-- INSERT --" : "-- NORMAL --";
     const position = `Line ${editorCursorLine + 1}/${editorContent.length}`;
-    statusText = `${modeText}  |  ${editorFilename}  |  ${position}`;
+    const modified = isFileModified ? " [+]" : "";
+    statusText = `${modeText}  |  ${editorFilename}${modified}  |  ${position}`;
   }
 
   editorStatusBar.textContent = statusText;
@@ -228,14 +246,91 @@ function clampCursorCol() {
   editorCursorCol = Math.min(editorCursorCol, line.length);
 }
 
+function saveUndoState() {
+  // Salva lo stato corrente
+  const state = {
+    content: editorContent.map((line) => line),
+    cursorLine: editorCursorLine,
+    cursorCol: editorCursorCol,
+  };
+
+  undoHistory.push(state);
+
+  // Limita dimensione history
+  if (undoHistory.length > maxUndoSteps) {
+    undoHistory.shift();
+  }
+
+  // Pulisce redo quando si fa una nuova modifica
+  redoHistory = [];
+
+  // Marca come modificato (solo se non è il primo salvataggio)
+  if (undoHistory.length > 1) {
+    checkIfModified();
+  }
+}
+
+// Funzione per verificare se il contenuto è stato modificato
+function checkIfModified() {
+  const currentContent = editorContent.join("\n");
+  isFileModified = currentContent !== originalContent;
+}
+
+function undo() {
+  if (undoHistory.length <= 1) return;
+
+  redoHistory.push({
+    content: editorContent.map((line) => line),
+    cursorLine: editorCursorLine,
+    cursorCol: editorCursorCol,
+  });
+
+  undoHistory.pop();
+
+  const prevState = undoHistory[undoHistory.length - 1];
+  editorContent = prevState.content.map((line) => line);
+  editorCursorLine = Math.min(prevState.cursorLine, editorContent.length - 1);
+  editorCursorCol = prevState.cursorCol;
+
+  clampCursorCol();
+  checkIfModified(); // Verifica se ancora modificato
+  updateEditorDisplay();
+}
+
+function redo() {
+  if (redoHistory.length === 0) return;
+
+  const nextState = redoHistory.pop();
+
+  undoHistory.push({
+    content: editorContent.map((line) => line),
+    cursorLine: editorCursorLine,
+    cursorCol: editorCursorCol,
+  });
+
+  editorContent = nextState.content.map((line) => line);
+  editorCursorLine = Math.min(nextState.cursorLine, editorContent.length - 1);
+  editorCursorCol = nextState.cursorCol;
+
+  clampCursorCol();
+  checkIfModified(); // Verifica se ancora modificato
+  updateEditorDisplay();
+}
+
 function handleInsertMode(e) {
   if (e.key === "Escape") {
     editorMode = "NORMAL";
-    updateStatusBar();
+    // Sposta cursore indietro di 1 se non a inizio riga (comportamento Vi)
+    if (editorCursorCol > 0) {
+      editorCursorCol--;
+    }
+    updateEditorDisplay();
     return;
   }
 
   if (e.key === "Enter") {
+    saveUndoState();
+
     const line = editorContent[editorCursorLine];
 
     const before = line.slice(0, editorCursorCol);
@@ -252,6 +347,8 @@ function handleInsertMode(e) {
   }
 
   if (e.key === "Backspace") {
+    saveUndoState();
+
     const line = editorContent[editorCursorLine];
 
     if (editorCursorCol > 0) {
@@ -275,6 +372,8 @@ function handleInsertMode(e) {
   }
 
   if (e.key.length === 1) {
+    saveUndoState();
+
     const line = editorContent[editorCursorLine];
 
     const before = line.slice(0, editorCursorCol);
@@ -288,9 +387,19 @@ function handleInsertMode(e) {
 }
 
 function handleNormalMode(e) {
+  // Gestione Ctrl+r per redo
+  if (e.ctrlKey && e.key === "r") {
+    redo();
+    return;
+  }
+
   normalBuffer += e.key;
 
+  // Comando dd - cancella riga
   if (normalBuffer === "dd") {
+    saveUndoState();
+
+    yankBuffer = editorContent[editorCursorLine]; // Salva in yank buffer
     editorContent.splice(editorCursorLine, 1);
 
     if (editorCursorLine >= editorContent.length) {
@@ -300,6 +409,44 @@ function handleNormalMode(e) {
     if (editorContent.length === 0) {
       editorContent.push("");
       editorCursorLine = 0;
+    }
+
+    editorCursorCol = 0;
+    normalBuffer = "";
+    updateEditorDisplay();
+    return;
+  }
+
+  // Comando yy - yank (copia) riga
+  if (normalBuffer === "yy") {
+    yankBuffer = editorContent[editorCursorLine];
+    normalBuffer = "";
+    updateEditorDisplay();
+    return;
+  }
+
+  // Comando gg - vai a prima riga
+  if (normalBuffer === "gg") {
+    editorCursorLine = 0;
+    editorCursorCol = 0;
+    normalBuffer = "";
+    updateEditorDisplay();
+    return;
+  }
+
+  // Comando dw - cancella parola
+  if (normalBuffer === "dw") {
+    saveUndoState();
+
+    const line = editorContent[editorCursorLine];
+    const remaining = line.slice(editorCursorCol);
+
+    // Trova fine parola (primo spazio o fine riga)
+    const match = remaining.match(/^\S+\s*/);
+    if (match) {
+      yankBuffer = match[0];
+      editorContent[editorCursorLine] =
+        line.slice(0, editorCursorCol) + remaining.slice(match[0].length);
     }
 
     normalBuffer = "";
@@ -315,32 +462,57 @@ function handleNormalMode(e) {
       updateStatusBar();
       return;
 
+    case "I":
+      // Insert a inizio riga
+      editorCursorCol = 0;
+      editorMode = "INSERT";
+      updateEditorDisplay();
+      return;
+
+    case "A":
+      // Append a fine riga
+      editorCursorCol = editorContent[editorCursorLine].length;
+      editorMode = "INSERT";
+      updateEditorDisplay();
+      return;
+
     case ":":
       editorMode = "COMMAND";
       commandBuffer = "";
       updateStatusBar();
       return;
 
-    case "n": {
+    case "n":
       isNumberOfLineVisible = !isNumberOfLineVisible;
       updateEditorDisplay();
       return;
-    }
 
     case "a":
-      editorCursorCol = editorContent[editorCursorLine].length;
+      // Append dopo cursore
+      if (editorCursorCol < editorContent[editorCursorLine].length) {
+        editorCursorCol++;
+      }
       editorMode = "INSERT";
       updateEditorDisplay();
-      updateStatusBar();
       return;
 
     case "o":
+      // Open line below
+      saveUndoState();
       editorContent.splice(editorCursorLine + 1, 0, "");
       editorCursorLine++;
       editorCursorCol = 0;
       editorMode = "INSERT";
       updateEditorDisplay();
-      updateStatusBar();
+      return;
+
+    case "O":
+      // Open line above
+      saveUndoState();
+      editorContent.splice(editorCursorLine, 0, "");
+      editorCursorCol = 0;
+      editorMode = "INSERT";
+      updateEditorDisplay();
       return;
 
     case "h":
@@ -349,8 +521,9 @@ function handleNormalMode(e) {
       return;
 
     case "l":
-      if (editorCursorCol < editorContent[editorCursorLine].length)
-        editorCursorCol++;
+      // Fix: non permettere di andare oltre la fine della riga in NORMAL mode
+      const maxCol = Math.max(0, editorContent[editorCursorLine].length - 1);
+      if (editorCursorCol < maxCol) editorCursorCol++;
       updateEditorDisplay();
       return;
 
@@ -370,17 +543,114 @@ function handleNormalMode(e) {
       updateEditorDisplay();
       return;
 
-    case "x": {
+    case "x":
+      // Delete char under cursor
+      saveUndoState();
       const line = editorContent[editorCursorLine];
 
       if (editorCursorCol < line.length) {
+        yankBuffer = line[editorCursorCol];
         editorContent[editorCursorLine] =
           line.slice(0, editorCursorCol) + line.slice(editorCursorCol + 1);
       }
 
       updateEditorDisplay();
       return;
+
+    case "p":
+      // Paste dopo cursore/riga
+      if (yankBuffer) {
+        saveUndoState();
+
+        // Se yankBuffer contiene una riga intera, incolla sotto
+        if (yankBuffer.indexOf("\n") === -1 && yankBuffer.length > 0) {
+          // Probabilmente è una riga intera da dd/yy
+          // Verifica se sembra una riga (lunga più di qualche char)
+          if (normalBuffer === "" && yankBuffer.length > 2) {
+            editorContent.splice(editorCursorLine + 1, 0, yankBuffer);
+            editorCursorLine++;
+            editorCursorCol = 0;
+          } else {
+            // Incolla caratteri nella posizione corrente
+            const line = editorContent[editorCursorLine];
+            editorContent[editorCursorLine] =
+              line.slice(0, editorCursorCol + 1) +
+              yankBuffer +
+              line.slice(editorCursorCol + 1);
+            editorCursorCol += yankBuffer.length;
+          }
+        }
+
+        updateEditorDisplay();
+      }
+      return;
+
+    case "P":
+      // Paste prima cursore/riga
+      if (yankBuffer) {
+        saveUndoState();
+
+        if (normalBuffer === "" && yankBuffer.length > 2) {
+          editorContent.splice(editorCursorLine, 0, yankBuffer);
+          editorCursorCol = 0;
+        } else {
+          const line = editorContent[editorCursorLine];
+          editorContent[editorCursorLine] =
+            line.slice(0, editorCursorCol) +
+            yankBuffer +
+            line.slice(editorCursorCol);
+          editorCursorCol += yankBuffer.length - 1;
+        }
+
+        updateEditorDisplay();
+      }
+      return;
+
+    case "u":
+      // Undo
+      undo();
+      return;
+
+    case "0":
+      // Vai a inizio riga
+      editorCursorCol = 0;
+      updateEditorDisplay();
+      return;
+
+    case "$":
+      // Vai a fine riga
+      editorCursorCol = Math.max(0, editorContent[editorCursorLine].length - 1);
+      updateEditorDisplay();
+      return;
+
+    case "G":
+      // Vai a ultima riga
+      editorCursorLine = editorContent.length - 1;
+      editorCursorCol = 0;
+      updateEditorDisplay();
+      return;
+
+    case "r":
+      // Replace mode - aspetta prossimo carattere
+      normalBuffer = "r";
+      return;
+  }
+
+  // Gestione replace
+  if (normalBuffer.startsWith("r") && normalBuffer.length === 2) {
+    saveUndoState();
+    const newChar = normalBuffer[1];
+    const line = editorContent[editorCursorLine];
+
+    if (editorCursorCol < line.length) {
+      editorContent[editorCursorLine] =
+        line.slice(0, editorCursorCol) +
+        newChar +
+        line.slice(editorCursorCol + 1);
     }
+
+    normalBuffer = "";
+    updateEditorDisplay();
   }
 }
 
@@ -393,13 +663,12 @@ function handleCommandMode(e) {
   }
 
   if (e.key === "Enter") {
-    executeCommand(commandBuffer);
+    const result = executeCommand(commandBuffer);
 
+    // Solo se executeCommand non ha gestito l'errore
     commandBuffer = "";
-    editorMode = "NORMAL";
 
-    updateEditorDisplay();
-    updateStatusBar();
+    // Non chiamare updateStatusBar() qui - lo fa executeCommand quando necessario
     return;
   }
 
@@ -415,19 +684,64 @@ function handleCommandMode(e) {
   }
 }
 
+// Modifica executeCommand per mostrare il messaggio di errore
 function executeCommand(cmd) {
   if (cmd === "w") {
     saveFile();
-  } else if (cmd === "wq") {
+    return; // IMPORTANTE: esci qui
+  } else if (cmd === "wq" || cmd === "x") {
     saveFile();
     closeEditor(true);
+    return;
   } else if (cmd === "q") {
+    if (isFileModified) {
+      editorStatusBar.textContent =
+        "E37: No write since last change (add ! to override)";
+      editorMode = "NORMAL";
+      setTimeout(() => {
+        if (state.editorActive) {
+          updateStatusBar();
+        }
+      }, 2000);
+      return;
+    }
     closeEditor(false);
+    return;
   } else if (cmd === "q!") {
-    closeEditor(false);
+    closeEditor(false, true);
+    return;
+  } else if (cmd.match(/^\d+$/)) {
+    const lineNum = parseInt(cmd, 10) - 1;
+    if (lineNum >= 0 && lineNum < editorContent.length) {
+      editorCursorLine = lineNum;
+      editorCursorCol = 0;
+      updateEditorDisplay();
+    }
+    return;
+  } else if (cmd.startsWith("w ")) {
+    const newName = cmd.substring(2).trim();
+    if (isValidName(newName)) {
+      editorFilename = newName;
+      saveFile();
+    } else {
+      editorStatusBar.textContent = `E32: Invalid file name: ${newName}`;
+      editorMode = "NORMAL";
+      setTimeout(() => {
+        if (state.editorActive) {
+          updateStatusBar();
+        }
+      }, 2000);
+    }
+    return;
   } else {
-    // Comando non riconosciuto, torna in normal mode
+    editorStatusBar.textContent = `E492: Not an editor command: ${cmd}`;
     editorMode = "NORMAL";
+    setTimeout(() => {
+      if (state.editorActive) {
+        updateStatusBar();
+      }
+    }, 2000);
+    return;
   }
 }
 
@@ -450,9 +764,24 @@ function saveFile() {
   };
 
   saveFS();
+
+  // Aggiorna contenuto originale e resetta flag
+  originalContent = content;
+  isFileModified = false;
+
+  // Passa in NORMAL mode
+  editorMode = "NORMAL";
+
+  // Mostra messaggio di salvataggio
+  editorStatusBar.textContent = `"${editorFilename}" ${editorContent.length}L, ${size.bytes}B written`;
+  setTimeout(() => {
+    if (state.editorActive) {
+      updateStatusBar(); // Questo mostrerà la status bar normale con -- NORMAL --
+    }
+  }, 1500);
 }
 
-function closeEditor(saved = true) {
+function closeEditor(saved = false, forced = false) {
   state.editorActive = false;
   document.removeEventListener("keydown", editorKeyHandler);
 
@@ -465,13 +794,25 @@ function closeEditor(saved = true) {
   dom.terminal.querySelector(".prompt").style.display = "flex";
   dom.input.focus();
 
-  if (saved) print(`"${editorFilename}" saved`);
+  if (saved) {
+    print(`"${editorFilename}" saved`);
+  } else if (forced && isFileModified) {
+    print(`"${editorFilename}" closed without saving`);
+  }
   print("");
 
+  // Reset variabili
   editorContent = [];
   editorCursorLine = 0;
+  editorCursorCol = 0;
   editorFilename = "";
   commandBuffer = "";
+  normalBuffer = "";
+  yankBuffer = "";
+  undoHistory = [];
+  redoHistory = [];
+  isFileModified = false;
+  originalContent = "";
 }
 
 function handleArrowKeys(e) {
@@ -488,10 +829,15 @@ function handleArrowKeys(e) {
 
     case "ArrowRight": {
       const line = editorContent[editorCursorLine];
+      const maxCol =
+        editorMode === "INSERT" ? line.length : Math.max(0, line.length - 1);
 
-      if (editorCursorCol < line.length) {
+      if (editorCursorCol < maxCol) {
         editorCursorCol++;
-      } else if (editorCursorLine < editorContent.length - 1) {
+      } else if (
+        editorCursorLine < editorContent.length - 1 &&
+        editorMode === "INSERT"
+      ) {
         editorCursorLine++;
         editorCursorCol = 0;
       }
@@ -518,12 +864,16 @@ function handleArrowKeys(e) {
     case "Home":
       editorCursorCol = 0;
       updateEditorDisplay();
-      break;
+      return true;
 
     case "End":
-      editorCursorCol = editorContent[editorCursorLine].length;
+      const maxEndCol =
+        editorMode === "INSERT"
+          ? editorContent[editorCursorLine].length
+          : Math.max(0, editorContent[editorCursorLine].length - 1);
+      editorCursorCol = maxEndCol;
       updateEditorDisplay();
-      break;
+      return true;
   }
 
   return false;

@@ -17,7 +17,7 @@ async function start() {
   await loadFS();
 
   let savedTheme = loadTheme();
-  applyTheme(savedTheme || "classic");
+  applyTheme(savedTheme || "dracula");
 
   bootSequence();
 

@@ -19,11 +19,13 @@ export function bootSequence() {
     " [OK]",
     "",
     "Loading core modules:",
-    " [OK] VIRTUAL FILESYSTEM ",
-    " [OK] VI EDITOR          ",
-    " [OK] BASIC INTERPRETER  ",
     "",
-    " [INFO] Virtual filesystem mounted",
+    " [OK] TERMINAL NextTerminal          1.1.7",
+    " [OK] FILESYSTEM NextVFS             1.1.7",
+    " [OK] EDITOR NextVi                  1.0.0",
+    " [OK] EDITOR NextNano                1.0.0",
+    " [OK] INTERPRETER NextBasic          0.7.1",
+    "",
     " [INFO] Initializing user interface...",
     "",
     "Welcome to NextOS!",
@@ -37,13 +39,12 @@ export function bootSequence() {
       print(lines[i++]);
       setTimeout(next, 100);
     } else {
+      dom.terminal.querySelector(".prompt").classList.remove("hidden");
       setTimeout(finish, 500);
     }
   }
 
   function finish() {
-    dom.terminal.querySelector(".prompt").classList.remove("hidden");
-
     state.isLoggingIn = false;
     dom.input.disabled = false;
     dom.input.focus();

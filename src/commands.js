@@ -8,6 +8,7 @@ import { clearTerminal, print } from "./terminal.js";
 import { applyTheme } from "./theme.js";
 import { openEditor } from "./editor.js";
 import { runBasicFile } from "./basic-runner.js";
+import { bootSequence } from "./boot.js";
 
 export function cmdLs() {
   const node = getNode(state.cwd);
@@ -93,6 +94,7 @@ export function cmdCd(path) {
 export function cmdMkdir(dirName) {
   if (!dirName) {
     print("mkdir: missing directory name");
+    print("Usage: mkdir <directory>");
     print("");
     return;
   }
@@ -137,6 +139,7 @@ export function cmdMkdir(dirName) {
 export function cmdRmdir(path) {
   if (!path) {
     print("rmdir: missing directory name");
+    print("Usage: rmdir <directory>");
     print("");
     updatePrompt();
     return;
@@ -194,8 +197,7 @@ export function cmdRmdir(path) {
     return;
   }
 
-  print(`Remove directory '${path}'?`);
-  print("y/N:");
+  print(`Remove directory '${path}'? (y/N)`);
   print("");
 
   state.waitingConfirm = {
@@ -211,26 +213,21 @@ export function cmdRmdir(path) {
 export function cmdRm(args) {
   if (!args || args.length === 0) {
     print("rm: missing operand");
-    print("Usage: rm [-r] <file|directory>");
+    print("Usage: rm [-r] <file|directory|pattern>");
+    print("Examples: rm file.txt, rm *.bas, rm test*");
     print("");
     updatePrompt();
     return;
   }
 
-  // if (state.currentUser.role === "guest") {
-  //   print("rm: permission denied");
-  //   print("");
-  //   return;
-  // }
-
   let recursive = false;
-  let targetPath = args[0];
+  let targetPattern = args[0];
 
   if (args[0] === "-r" || args[0] === "-R") {
     recursive = true;
-    targetPath = args[1];
+    targetPattern = args[1];
 
-    if (!targetPath) {
+    if (!targetPattern) {
       print("rm: missing operand after '-r'");
       print("");
       updatePrompt();
@@ -238,8 +235,45 @@ export function cmdRm(args) {
     }
   }
 
-  targetPath = targetPath.replace(/\/+$/, "");
-  const fullPath = normalizePath(state.cwd, targetPath);
+  // Controlla se contiene wildcard
+  const hasWildcard =
+    targetPattern.includes("*") || targetPattern.includes("?");
+
+  if (hasWildcard) {
+    // Espandi il pattern
+    const matches = expandGlob(targetPattern, state.cwd);
+
+    if (matches.length === 0) {
+      print(`rm: no matches found for: ${targetPattern}`);
+      print("");
+      updatePrompt();
+      return;
+    }
+
+    // Mostra i file che verranno rimossi
+    print(`The following ${matches.length} item(s) will be removed:`);
+    matches.forEach((name) => {
+      const node = getNode([...state.cwd, name]);
+      const type =
+        node.type === "dir" ? "[dir]" : node.type === "lnk" ? "[lnk]" : "[txt]";
+      print(`  ${name} ${type}`);
+    });
+    print("Continue? (y/N)");
+    print("");
+
+    state.waitingConfirm = {
+      type: "rm-glob",
+      matches,
+      recursive,
+      pattern: targetPattern,
+    };
+
+    return;
+  }
+
+  // Codice originale per singolo file
+  targetPattern = targetPattern.replace(/\/+$/, "");
+  const fullPath = normalizePath(state.cwd, targetPattern);
 
   if (fullPath.length === 0) {
     print("rm: cannot remove root");
@@ -254,7 +288,7 @@ export function cmdRm(args) {
   const parentNode = getNode(parentPath);
 
   if (!parentNode || !parentNode.children) {
-    print(`rm: '${targetPath}': No such file or directory`);
+    print(`rm: '${targetPattern}': No such file or directory`);
     print("");
     updatePrompt();
     return;
@@ -263,7 +297,7 @@ export function cmdRm(args) {
   const target = parentNode.children[name];
 
   if (!target) {
-    print(`rm: '${targetPath}': No such file or directory`);
+    print(`rm: '${targetPattern}': No such file or directory`);
     print("");
     updatePrompt();
     return;
@@ -273,10 +307,10 @@ export function cmdRm(args) {
 
   if (target.type === "dir") {
     msg = recursive
-      ? `Remove recursively '${targetPath}'?\ny/N:`
-      : `rm: '${targetPath}': is a directory`;
+      ? `Remove recursively '${targetPattern}'? (y/N)`
+      : `rm: '${targetPattern}': is a directory`;
   } else {
-    msg = `Remove '${targetPath}'?\ny/N:`;
+    msg = `Remove '${targetPattern}'? (y/N)`;
   }
 
   if (target.type === "dir" && !recursive) {
@@ -288,13 +322,12 @@ export function cmdRm(args) {
   }
 
   print(msg);
-  print("");
 
   state.waitingConfirm = {
     type: "rm",
     parentNode,
     name,
-    path: targetPath,
+    path: targetPattern,
     isDir: target.type === "dir",
     recursive,
   };
@@ -304,7 +337,7 @@ export function cmdRm(args) {
 
 export function cmdMkLink(args) {
   if (!args || args.length !== 2) {
-    print("ln: missing operand");
+    print("mklink: missing operand");
     print("Usage: mklink <url> <name>");
     print("");
     return;
@@ -354,71 +387,10 @@ export function cmdMkLink(args) {
   print("");
 }
 
-export function cmdRmLink(path) {
-  if (!path) {
-    print("rmlink: missing link name");
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  path = path.replace(/\/+$/, "");
-
-  const fullPath = normalizePath(state.cwd, path);
-
-  if (fullPath.length === 0) {
-    print("rmlink: cannot remove link");
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  const name = fullPath.pop();
-  const parentPath = fullPath;
-
-  const parentNode = getNode(parentPath);
-
-  if (!parentNode || !parentNode.children) {
-    print(`rmlink: '${path}': No such link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  const target = parentNode.children[name];
-
-  if (!target) {
-    print(`rmlink: '${path}': No such link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  if (target.type !== "lnk") {
-    print(`rmlink: '${path}': Not a link`);
-    print("");
-    updatePrompt();
-    return;
-  }
-
-  print(`Remove link '${name}'?`);
-  print("y/N:");
-  print("");
-
-  state.waitingConfirm = {
-    type: "rmlink",
-    parentNode,
-    name,
-    path,
-  };
-
-  return;
-}
-
 export function cmdMv(args) {
   if (args.length !== 2) {
     print("mv: missing operand");
-    print("Usage: mv SOURCE DEST");
+    print("Usage: mv <source> <destination>");
     print("");
     return;
   }
@@ -512,7 +484,7 @@ export function cmdMv(args) {
 export function cmdCp(args) {
   if (!args || args.length < 2) {
     print("cp: missing operand");
-    print("Usage: cp [-r] SOURCE DEST");
+    print("Usage: cp [-r] <source> <destination>");
     print("");
     return;
   }
@@ -606,9 +578,7 @@ export function cmdClear() {
 }
 
 export function cmdReset() {
-  print(`All personal file or directory will be lost.`);
-  print("y/N:");
-  print("");
+  print(`All personal file or directory will be lost. Continue? (y/N)`);
 
   state.waitingConfirm = {
     type: "reset",
@@ -661,7 +631,6 @@ export function cmdLogout(silently = false) {
   updateCaret();
 
   if (!silently) {
-    print("");
     print("Logged out. Welcome guest.");
     print("");
   }
@@ -676,7 +645,7 @@ export function cmdOpenEditor(path) {
 
 export function cmdRun(args) {
   if (!args || args.length === 0) {
-    print("");
+    print("run: missing file operand");
     print("Usage: run <file.bas>");
     print("");
     print("Execute a BASIC program from the terminal.");
@@ -691,7 +660,6 @@ export function cmdRun(args) {
 
   // Check extension
   if (!filepath.endsWith(".bas")) {
-    print("");
     print("Warning: File should have .bas extension");
     print("");
     updatePrompt();
@@ -707,7 +675,7 @@ export function cmdHelp() {
   print("NEXTOS TERMINAL - Quick Reference");
   print("");
   print("Directories:     ls, cd,  mkdir, rmdir, rm [-r]");
-  print("Files:           mklink, rmlink, mv, cp, rm");
+  print("Files:           mklink, mv, cp, rm");
   print("System:          clear, reset, time, version");
   print("User:            login, logout");
   print("Other:           vi, run, theme, help");
@@ -728,7 +696,7 @@ export function cmdRunApp(inputPath) {
     return;
   }
 
-  // Get current theme from localStorage or default to classic
+  // Get current theme from localStorage or default to dracula
   const currentTheme = localStorage.getItem("terminal_theme") || "dracula";
 
   // Build URL with theme parameter
@@ -742,11 +710,33 @@ export function cmdRunApp(inputPath) {
   print("");
 }
 
+function expandGlob(pattern, currentPath) {
+  const node = getNode(currentPath);
+
+  if (!node || !node.children) {
+    return [];
+  }
+
+  // Converti il pattern glob in regex
+  // * diventa .*
+  // ? diventa .
+  const regexPattern = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&") // Escape caratteri speciali regex
+    .replace(/\*/g, ".*") // * match qualsiasi carattere
+    .replace(/\?/g, "."); // ? match un singolo carattere
+
+  const regex = new RegExp(`^${regexPattern}$`);
+
+  // Trova tutti i nomi che matchano
+  return Object.keys(node.children).filter((name) => regex.test(name));
+}
+
 export async function handleConfirm(value) {
   const confirm = state.waitingConfirm;
   state.waitingConfirm = null;
 
-  if (value.toLowerCase() !== "y" || value == "") {
+  // Accetta solo "y" esplicito (case insensitive)
+  if (value.toLowerCase() !== "y") {
     print("Action cancelled.");
     print("");
     updatePrompt();
@@ -763,7 +753,8 @@ export async function handleConfirm(value) {
     localStorage.clear();
     await loadFS();
 
-    updatePrompt();
+    dom.terminal.querySelector(".prompt").classList.add("hidden");
+    bootSequence();
     return;
   }
 
@@ -771,20 +762,33 @@ export async function handleConfirm(value) {
   if (confirm.type === "rmdir") {
     delete confirm.parentNode.children[confirm.name];
     saveFS();
-
     print(`Removed: ${confirm.path}/`);
     print("");
     updatePrompt();
     return;
   }
 
-  // RMLINK
-  if (confirm.type === "rmlink") {
-    delete confirm.parentNode.children[confirm.name];
+  // RM-GLOB
+  if (confirm.type === "rm-glob") {
+    const currentNode = getNode(state.cwd);
+    let removed = 0;
+
+    for (const name of confirm.matches) {
+      const target = currentNode.children[name];
+
+      // Salta directory se non recursive
+      if (target.type === "dir" && !confirm.recursive) {
+        print(`Skipping directory: ${name} (use -r for directories)`);
+        continue;
+      }
+
+      delete currentNode.children[name];
+      removed++;
+    }
 
     saveFS();
 
-    print(`Removed: ${confirm.path}/`);
+    print(`Removed ${removed} item(s) matching '${confirm.pattern}'`);
     print("");
     updatePrompt();
     return;

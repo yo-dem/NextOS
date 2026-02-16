@@ -13,7 +13,6 @@ import {
   cmdMkdir,
   cmdMkLink,
   cmdRmdir,
-  cmdRmLink,
   cmdRm,
   cmdMv,
   cmdCp,
@@ -72,12 +71,6 @@ function runCommand(cmd, args) {
       dom.promptPath.textContent = ">:";
       updateCaret();
       cmdRmdir(args[0]);
-      break;
-
-    case "rmlink":
-      dom.promptPath.textContent = ">:";
-      updateCaret();
-      cmdRmLink(args[0]);
       break;
 
     case "rm":
